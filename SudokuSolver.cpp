@@ -25,7 +25,8 @@ class Sudoku9x9{
     private:
         int Type;       // 1 - Classic, 2 - Nonconsecutive, 3 - Diagonal, 4 - AntiKnight
         int Status;     // 0 - Unknown, 1 - Solved, 2 - Unsolvable(by this solver), 3 - Ambiguous, 4 - Contradictionary
-    public:
+		int Difficulty; // 0 - Unknown, 1 - Very Easy, 2 - Easy, 3 - Hard, 4 - Very Hard
+	public:
         int GivenGrid[9][9];        // [row][column]
         int CurrentGrid[9][9];      // [row][column]
         bool PossibilitiesGrid[9][9][9];     // [row][column][digit]
@@ -34,8 +35,10 @@ class Sudoku9x9{
         
         int getType(){return Type;};
         int getStatus(){return Status;};
+		int getDifficulty(){return Difficulty;};
 
         void setStatus(int s){Status = s;};
+		void setDifficulty(int d){Difficulty = d;};
 
         int N_Given();     // number of digits given
         int N_Current();   // number of digits currently placed on the grid
@@ -57,6 +60,7 @@ Sudoku9x9::Sudoku9x9(int Given[9][9], int type) : Type(type) {
             for (int k = 0; k < 9; k++) 
                 PossibilitiesGrid[i][j][k] = 1;
     Status = 0;
+	Difficulty = 0;
 }
 
 int Sudoku9x9::N_Given(){
@@ -205,13 +209,149 @@ int TotalPoss(bool Possibilities[9][9][9], int d, int r1, int c1, int r2, int c2
 	return suma;
 }
 
+Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
+	/* starting with unknown sudoku given, function tries to solve it and returns sudoku with status:
+	solved, unsolvable, ambiguous or conradictory.
+	 */
+
+	// for classic sudoku
+	if( sudoku.getType()==1 ){
+		if( IsContradictory(sudoku) ){
+			sudoku.setStatus(4); // contradictory
+			return sudoku;
+		}
+		if(sudoku.N_Current() < 17){
+			sudoku.setStatus(3); // ambiguous
+			return sudoku;
+		}
+
+		bool progress = true;
+		while(progress){
+			progress = false;
+
+			// actualization of PossibilitiesGrid
+			// for every digit in the CurrentGrid, program checks the possibilities it eliminates
+			for (int r = 0; r < 9; r++) {
+				for (int c = 0; c < 9; c++) {
+					if (sudoku.CurrentGrid[r][c] != 0) {
+						int D = sudoku.CurrentGrid[r][c];
+						// eliminating possibilities in the exact place
+						for (int d = 0; d < 9; d++) if (d != D-1) {
+							if (sudoku.PossibilitiesGrid[r][c][d] == true) {
+								progress = true; 
+								sudoku.PossibilitiesGrid[r][c][d] = false;
+							}
+						}
+						// eliminating possibilities in the row
+						for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
+							if (sudoku.PossibilitiesGrid[r][c2][D-1] == true) { 
+								progress = true;
+								sudoku.PossibilitiesGrid[r][c2][D-1] = false;
+							}
+						}
+						// eliminating possibilities in the column
+						for (int r2 = 0; r2 < 9; r2++) if (r2 != r) {
+							if (sudoku.PossibilitiesGrid[r2][c][D-1] == true) { 
+								progress = true;
+								sudoku.PossibilitiesGrid[r2][c][D-1] = false;
+							}
+						}
+						// eliminating possibilities in the box
+						int boxr = r/3, boxc = c/3;
+						for (int r2 = 0; r2 < 3; r2++) 
+							for (int c2 = 0; c2 < 3; c2++) 
+								if ( boxr*3 + r2 != r || boxc*3 + c2 != c ) {
+									if (sudoku.PossibilitiesGrid[boxr*3 + r2][boxc*3 + c2][D-1] == true) {
+										 progress = true;
+										 sudoku.PossibilitiesGrid[boxr*3 + r2][boxc*3 + c2][D-1] = false;
+									}
+								}
+
+
+					}
+				}
+			}
+
+			// actualization of the CurrentGrid
+			// for every digit checking if there is only one possibilitie 
+			// in a certain place, row, column or box
+			for (int d = 0; d < 9; d++) {
+				// checking if there is only one possibilitie in a place
+				for (int r = 0; r < 9; r++) {
+					for (int c = 0; c < 9; c++) {
+						if( sudoku.CurrentGrid[r][c] == 0 && sudoku.N_Possibilities(r,c) == 1 ){
+							for (int d = 0; d < 9; d++){
+								if( sudoku.PossibilitiesGrid[r][c][d] == true ){
+									progress = true;
+									sudoku.CurrentGrid[r][c] = d+1;
+									break;
+								}
+							}
+						}
+					}
+				}
+				// checking if there is only one possibilitie in a row
+				for (int r = 0; r < 9; r++) {
+					if( sudoku.N_Possibilities(d,r,0) == 1 ){
+						for (int c = 0; c < 9; c++){
+							if( sudoku.PossibilitiesGrid[r][c][d] == true ){
+								if( sudoku.CurrentGrid[r][c] == 0 ){
+									progress = true;
+									sudoku.CurrentGrid[r][c] = d+1;
+								}
+								break;
+							}
+						}
+					}
+				}
+				// checking if there is only one possibilitie in a column
+				for (int c = 0; c < 9; c++) {
+					if( sudoku.N_Possibilities(d,c,1) == 1 ){
+						for (int r = 0; r < 9; r++){
+							if( sudoku.PossibilitiesGrid[r][c][d] == true ){
+								if( sudoku.CurrentGrid[r][c] == 0 ){
+									progress = true;
+									sudoku.CurrentGrid[r][c] = d+1;
+								}
+								break;
+							}
+						}
+					}
+				}
+				// checking if there is only one possibilitie in a box
+				for(int boxr=0; boxr<3; boxr++){
+					for(int boxc=0; boxc<3; boxc++){
+						int sum = 0;
+						for(int r=0; r<3; r++)
+							for(int c=0; c<3; c++)
+								sum += sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d];
+						if( sum == 1 ){
+							for(int r=0; r<3; r++)
+								for(int c=0; c<3; c++)
+									if( sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d] == true ){
+										if( sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] == 0 ){
+											progress = true;
+											sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] = d+1;
+										}
+										break;
+									}
+						}
+					}	
+				}
+			}
+		}
+	}
+
+	return sudoku;
+}
+
 Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
 	/* starting with unknown sudoku given, function tries to solve it and returns sudoku with status:
 	solved, unsolvable, ambiguous or conradictory.
 	 */
 
-	// for unknown, classic sudoku
-	if( sudoku.getStatus() == 0 && sudoku.getType()==1 ){
+	// for classic sudoku
+	if( sudoku.getType()==1 ){
 		if( IsContradictory(sudoku) ){
 			sudoku.setStatus(4); // contradictory
 			return sudoku;
@@ -435,7 +575,6 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
 				
 			}
 
-
 			// actualization of the CurrentGrid
 			// for every digit checking if there is only one possibilitie 
 			// in a certain place, row, column or box
@@ -509,25 +648,209 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
 	return sudoku;
 }
 
+Sudoku9x9 Solve(Sudoku9x9 sudoku){
+	// for unknown, classic sudoku
+	if( sudoku.getStatus() == 0 && sudoku.getType()==1 ){
+		if( IsContradictory(sudoku) ){
+			sudoku.setStatus(4); // contradictory
+			return sudoku;
+		}
+		if(sudoku.N_Current() < 17){
+			sudoku.setStatus(3); // ambiguous
+			return sudoku;
+		}
+
+		sudoku = TryToSolveEasy(sudoku);
+		if( IsContradictory(sudoku) ){
+			sudoku.setStatus(4); 		// contradictory
+			return sudoku;
+		}
+		if( IsFilled(sudoku) ){
+			sudoku.setStatus(1); 		// solved
+			sudoku.setDifficulty(1); 	// Very Easy
+			return sudoku;
+		}
+
+		sudoku = TryToSolve(sudoku);
+		if( IsContradictory(sudoku) ){
+			sudoku.setStatus(4); 		// contradictory
+			return sudoku;
+		}
+		if( IsFilled(sudoku) ){
+			sudoku.setStatus(1); 		// solved
+			sudoku.setDifficulty(2); 	// Easy
+			return sudoku;
+		}
+
+
+		bool progress = true;
+		int DifficultyLevel = 2;
+
+		while(progress){
+			progress = false;
+
+			// program is looking for rows in which this digit can fit only into exactly 2 places
+			if ( !IsFilled(sudoku) ) {
+				DifficultyLevel++;
+				// for every digit
+				for (int d = 0; d < 9; d++) {
+					if (progress == true) break;
+					int c1 = 0, c2 = 0;
+					for (int r = 0; r < 9; r++) {
+						if (progress == true) break;
+						if ( TotalPoss(sudoku.PossibilitiesGrid, d, r, 0, r, 8) == 2 ) {
+							// c1 and c2 are columns we are looking for
+							for (int c = 0; c < 8; c++) {
+								if ( sudoku.PossibilitiesGrid[r][c][d] == true ) {
+									c1 = c;
+									break;
+								}
+							}
+							for (int c = c1 + 1; c < 9; c++) {
+								if ( sudoku.PossibilitiesGrid[r][c][d] == true ) {
+									c2 = c;
+									break;
+								}
+							}
+							
+							// checking
+							Sudoku9x9 S1(sudoku), S2(sudoku);
+							S1.CurrentGrid[r][c1] = d+1;
+							S2.CurrentGrid[r][c2] = d+1;
+							S1 = TryToSolve(S1);
+							S2 = TryToSolve(S2);
+
+							bool contraS1 = IsContradictory(S1), contraS2 = IsContradictory(S2);
+							bool filledS1 = IsFilled(S1), filledS2 = IsFilled(S2);
+
+							if( contraS1 && contraS2 ){
+								sudoku.setStatus(4); 	// contradictory
+								return sudoku;
+							}
+							if( filledS1 && filledS2 && !contraS1 && !contraS2 ){
+								sudoku.setStatus(3);	// ambiguous
+								return sudoku;
+							}
+							if ( contraS1 ) {
+								sudoku = S2;
+								if ( filledS2 ){
+									sudoku.setStatus(1); 		// solved
+									sudoku.setDifficulty(DifficultyLevel);
+									return sudoku;
+								}
+								progress = true;
+								break;
+							}							
+							if ( contraS2 ) {
+								sudoku = S1;
+								if ( filledS1 ){
+									sudoku.setStatus(1); 		// solved
+									sudoku.setDifficulty(DifficultyLevel);
+									return sudoku;
+								}
+								progress = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+			// program is looking for columns in which this digit can fit only into exactly 2 places
+			if ( !IsFilled(sudoku) ) {
+				DifficultyLevel++;
+				// for every digit
+				for (int d = 0; d < 9; d++) {
+					if (progress == true) break;
+					int r1 = 0, r2 = 0;
+					for (int c = 0; c < 9; c++) {
+						if (progress == true) break;
+						if ( TotalPoss(sudoku.PossibilitiesGrid, d, 0, c, 8, c) == 2 ) {
+							// r1 and r2 are rows we are looking for
+							for (int r = 0; r < 8; r++) {
+								if ( sudoku.PossibilitiesGrid[r][c][d] == true) {
+									r1 = r;
+									break;
+								}
+							}
+							for (int r = r1 + 1; r < 9; r++) {
+								if ( sudoku.PossibilitiesGrid[r][c][d] == true ) {
+									r2 = r;
+									break;
+								}
+							}
+							
+							// checking
+							Sudoku9x9 S1(sudoku), S2(sudoku);
+							S1.CurrentGrid[r1][c] = d+1;
+							S2.CurrentGrid[r2][c] = d+1;
+							S1 = TryToSolve(S1);
+							S2 = TryToSolve(S2);
+
+							bool contraS1 = IsContradictory(S1), contraS2 = IsContradictory(S2);
+							bool filledS1 = IsFilled(S1), filledS2 = IsFilled(S2);
+
+							if( contraS1 && contraS2 ){
+								sudoku.setStatus(4); 	// contradictory
+								return sudoku;
+							}
+							if( filledS1 && filledS2 && !contraS1 && !contraS2 ){
+								sudoku.setStatus(3);	// ambiguous
+								return sudoku;
+							}
+							if ( contraS1 ) {
+								sudoku = S2;
+								if ( filledS2 ){
+									sudoku.setStatus(1); 		// solved
+									sudoku.setDifficulty(DifficultyLevel);
+									return sudoku;
+								}
+								progress = true;
+								break;
+							}							
+							if ( contraS2 ) {
+								sudoku = S1;
+								if ( filledS1 ){
+									sudoku.setStatus(1); 		// solved
+									sudoku.setDifficulty(DifficultyLevel);
+									return sudoku;
+								}
+								progress = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		sudoku.setStatus(2); 		// unsolvable
+		sudoku.setDifficulty(0);	// unknown
+		return sudoku;
+	}
+
+	return sudoku;
+
+}
+
 int main() {
 	
     int tab[9][9] = {
-		{ 1,0,6,0,0,0,0,0,0 },
-		{ 0,0,7,0,3,2,0,0,0 },
-		{ 0,4,0,9,7,0,0,0,0 },
-		{ 0,9,0,7,0,0,3,0,0 },
-		{ 0,6,0,0,1,0,0,0,5 },
-		{ 0,0,0,8,0,0,7,9,0 },
-		{ 0,0,0,0,0,0,1,3,0 },
-		{ 0,0,8,1,4,0,2,0,0 },
-		{ 0,0,4,0,0,0,6,0,0 }
+	{ 0,9,1,0,0,0,2,0,0 },
+	{ 0,2,0,0,0,4,0,8,0 },
+	{ 5,0,0,2,0,0,0,0,7 },
+	{ 7,0,0,0,8,0,1,4,0 },
+	{ 0,0,0,9,0,7,0,0,0 },
+	{ 0,6,8,0,5,0,0,0,0 },
+	{ 1,0,0,0,0,9,0,0,8 },
+	{ 0,7,0,3,0,0,0,0,0 },
+	{ 0,0,3,0,0,0,6,9,0 }
 	};
 
     Sudoku9x9 sudoku(tab);
 
 	cout<<sudoku.N_Current()<<" "<<IsFilled(sudoku)<<" "<<IsContradictory(sudoku)<<"\n";
 
-	sudoku = TryToSolve(sudoku);
+	sudoku = Solve(sudoku);
 	sudoku.PrintToConsole();
 
 	cout<<sudoku.N_Current()<<" "<<IsFilled(sudoku)<<" "<<IsContradictory(sudoku)<<"\n";
@@ -539,6 +862,7 @@ int main() {
 		cout<<endl;
 	}
 
+	cout<<sudoku.getStatus()<<" "<<sudoku.getDifficulty()<<"\n";
 	
 	return 0;
 }
