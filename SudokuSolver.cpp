@@ -1,124 +1,11 @@
-//#include <windows.h>
+
 #include <iostream>
 #include <algorithm>
 #include <vector>
-//#include <string>
-//#include <stdlib.h>
-//#include <time.h>
+#include <cstdlib>
+#include "Sudoku9x9.h"
 using namespace std;
 
-/*
-int getGivenDigit(int row, int column){return GivenGrid[row][column];};
-int getCurrentDigit(int row, int column){return CurrentGrid[row][column];};
-int getPossibilitie(int row, int column, int digit){return PossibilitiesGrid[row][column][digit];};
-int getType(){return Type;};
-int getStatus(){return Status;};
-
-void setGivenDigit(int row, int column, int d){GivenGrid[row][column] = d;};
-void setCurrentDigit(int row, int column, int d){CurrentGrid[row][column] = d;};
-void setPossibilitie(int row, int column, int digit, bool p){PossibilitiesGrid[row][column][digit] = p;};
-void setStatus(int s){Status = s;};
- */
-
-
-class Sudoku9x9{
-    private:
-        int Type;       // 1 - Classic, 2 - Nonconsecutive, 3 - Diagonal, 4 - AntiKnight
-        int Status;     // 0 - Unknown, 1 - Solved, 2 - Unsolvable(by this solver), 3 - Ambiguous, 4 - Contradictionary
-		int Difficulty; // 0 - Unknown, 1 - Very Easy, 2 - Easy, 3 - Hard, 4 - Very Hard
-	public:
-        int GivenGrid[9][9];        // [row][column]
-        int CurrentGrid[9][9];      // [row][column]
-        bool PossibilitiesGrid[9][9][9];     // [row][column][digit]
-        
-        Sudoku9x9(int Given[9][9], int type = 1);
-        
-        int getType(){return Type;};
-        int getStatus(){return Status;};
-		int getDifficulty(){return Difficulty;};
-
-        void setStatus(int s){Status = s;};
-		void setDifficulty(int d){Difficulty = d;};
-
-        int N_Given();     // number of digits given
-        int N_Current();   // number of digits currently placed on the grid
-        int N_Possibilities(int r, int c); // number of digits possible at row r and column c
-		int N_Possibilities(int d, int rc, bool type); 
-			// number of digits possible for a digit d in a row(type=0) or column(type=1) rc
-
-		void PrintToConsole();	
-};
-
-Sudoku9x9::Sudoku9x9(int Given[9][9], int type) : Type(type) {
-    for (int i = 0; i < 9; i++) 
-        for (int j = 0; j < 9; j++) {
-            GivenGrid[i][j] = Given[i][j];
-            CurrentGrid[i][j] = Given[i][j];
-        }
-    for (int i = 0; i < 9; i++) 
-        for (int j = 0; j < 9; j++) 
-            for (int k = 0; k < 9; k++) 
-                PossibilitiesGrid[i][j][k] = 1;
-    Status = 0;
-	Difficulty = 0;
-}
-
-int Sudoku9x9::N_Given(){
-    int sum = 0;
-    for(int i=0; i<9; i++)
-        for(int j=0;j<9;j++)
-            if(GivenGrid[i][j] != 0) sum++;
-    return sum;
-}
-
-int Sudoku9x9::N_Current(){
-    int sum = 0;
-    for(int i=0; i<9; i++)
-        for(int j=0;j<9;j++)
-            if(CurrentGrid[i][j] != 0) sum++;
-    return sum;
-}
-
-int Sudoku9x9::N_Possibilities(int r, int c){
-    int sum = 0;
-    for(int i=0; i<9; i++)
-        if(PossibilitiesGrid[r][c][i] != 0) sum++;
-    return sum;
-}
-
-int Sudoku9x9::N_Possibilities(int d, int rc, bool type){
-	int sum = 0;
-	if( !type ){
-		for(int c=0; c<9; c++){
-			sum += PossibilitiesGrid[rc][c][d];
-		}
-	}else{
-		for(int r=0; r<9; r++){
-			sum += PossibilitiesGrid[r][rc][d];
-		}
-	}
-	return sum;
-}
-
-void Sudoku9x9::PrintToConsole(){
-	for (int r = 0; r < 9; r++) {
-		for (int c = 0; c < 9; c++) {
-
-			if ( CurrentGrid[r][c] == 0 ) 
-				cout << "\033[1;31m";
-			else if( CurrentGrid[r][c] == GivenGrid[r][c]) 
-				 cout << "\033[1;37m";
-			else 
-				cout << "\033[1;32m";
-
-			cout << CurrentGrid[r][c];
-			cout <<"\033[0m";
-			if ((c + 1) % 3 == 0)cout << " ";
-		}
-		if ((r + 1) % 3 == 0)cout << endl;
-		cout << endl;
-	}
-}
 
 bool IsContradictory(Sudoku9x9 sudoku){
 	if(sudoku.getType()==1){
@@ -199,14 +86,6 @@ bool IsFilled(Sudoku9x9 sudoku) {
 			suma += sudoku.CurrentGrid[r][c];
 	if (suma != 45 * 9) return false;
 	return true;
-}
-
-int TotalPoss(bool Possibilities[9][9][9], int d, int r1, int c1, int r2, int c2) {
-	int suma = 0;
-	for (int r = r1; r <= r2; r++) 
-		for (int c = c1; c <= c2; c++)
-			suma += Possibilities[r][c][d];
-	return suma;
 }
 
 Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
@@ -649,8 +528,8 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
 }
 
 Sudoku9x9 Solve(Sudoku9x9 sudoku){
-	// for unknown, classic sudoku
-	if( sudoku.getStatus() == 0 && sudoku.getType()==1 ){
+	// for classic sudoku
+	if( sudoku.getType()==1 ){
 		if( IsContradictory(sudoku) ){
 			sudoku.setStatus(4); // contradictory
 			return sudoku;
@@ -832,37 +711,81 @@ Sudoku9x9 Solve(Sudoku9x9 sudoku){
 
 }
 
+Sudoku9x9 Generate(int seed){
+	int ZeroGrid[9][9] = {
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 }
+	};
+	Sudoku9x9 sudoku(ZeroGrid);
+	srand(seed);
+	for(int i=0; i<17; i++) sudoku.InsertRandomDigit();
+
+	int status, iter = 0, max_iter = 50;
+	while( iter <= max_iter){
+		sudoku = Solve(sudoku);
+		status = sudoku.getStatus();
+		if ( status == 1 ){
+			Sudoku9x9 sudoku_gen(sudoku.GivenGrid);
+			return sudoku_gen;
+		} else if(  status == 4 ){
+			return sudoku;
+		}
+		cout<<sudoku.N_Given()<<"\n";
+
+		sudoku.InsertRandomDigit();
+		iter++;
+	}
+
+	// function should never reach this point
+	//Sudoku9x9 sudoku_gen(sudoku.GivenGrid);
+	//return sudoku_gen;
+	return sudoku;
+}
+
 int main() {
 	
     int tab[9][9] = {
-	{ 0,9,1,0,0,0,2,0,0 },
-	{ 0,2,0,0,0,4,0,8,0 },
-	{ 5,0,0,2,0,0,0,0,7 },
-	{ 7,0,0,0,8,0,1,4,0 },
-	{ 0,0,0,9,0,7,0,0,0 },
-	{ 0,6,8,0,5,0,0,0,0 },
-	{ 1,0,0,0,0,9,0,0,8 },
+	{ 0,9,0,0,0,0,2,0,0 },
+	{ 0,0,0,0,0,4,0,0,0 },
+	{ 0,0,0,0,0,0,0,0,0 },
+	{ 7,0,0,0,0,0,0,4,0 },
+	{ 0,0,0,9,0,0,0,0,0 },
+	{ 0,6,8,0,0,0,0,0,0 },
+	{ 0,0,0,0,0,9,0,0,8 },
 	{ 0,7,0,3,0,0,0,0,0 },
-	{ 0,0,3,0,0,0,6,9,0 }
+	{ 0,0,0,0,0,0,6,0,0 }
 	};
 
     Sudoku9x9 sudoku(tab);
 
-	cout<<sudoku.N_Current()<<" "<<IsFilled(sudoku)<<" "<<IsContradictory(sudoku)<<"\n";
+	//sudoku = Solve(sudoku);
+	//sudoku.PrintToConsole();
 
-	sudoku = Solve(sudoku);
-	sudoku.PrintToConsole();
-
-	cout<<sudoku.N_Current()<<" "<<IsFilled(sudoku)<<" "<<IsContradictory(sudoku)<<"\n";
-
-	for(int r=0;r<9;r++){
-		for(int c=0;c<9;c++){
-			cout<<sudoku.N_Possibilities(r,c);
-		}
-		cout<<endl;
-	}
-
-	cout<<sudoku.getStatus()<<" "<<sudoku.getDifficulty()<<"\n";
 	
+	//sudoku = Generate(unsigned(time(0)));
+	sudoku = Generate(6);
+	
+
+	//sudoku.UpdatePossGrid();
+	// for(int r=0;r<9;r++){
+	// 	for(int c=0;c<9;c++){
+	// 		cout<<sudoku.N_Possibilities(r,c);
+	// 	}
+	// 	cout<<endl;
+	// }
+
+	Sudoku9x9 sudoku2(sudoku.GivenGrid);
+	sudoku2 = Solve(sudoku2);
+	sudoku2.PrintToConsole();
+	cout<<sudoku2.N_Current()<<" "<<sudoku2.N_Given()<<"\n";
+	cout<<sudoku2.getStatus()<<" "<<sudoku2.getDifficulty()<<"\n";
+
 	return 0;
 }
