@@ -722,22 +722,24 @@ Sudoku9x9 Generate(int seed){
 	{ 0,0,0,0,0,0,0,0,0 },
 	{ 0,0,0,0,0,0,0,0,0 }
 	};
-	Sudoku9x9 sudoku(ZeroGrid);
+	Sudoku9x9 sudoku(ZeroGrid), old_sudoku(ZeroGrid);
 	srand(seed);
 	for(int i=0; i<17; i++) sudoku.InsertRandomDigit();
 
 	int status, iter = 0, max_iter = 100;
 	while( iter <= max_iter){
+		old_sudoku = sudoku;
+		sudoku.InsertRandomDigit();
+
 		sudoku = Solve(sudoku);
 		status = sudoku.getStatus();
 		if ( status == 1 ){
 			Sudoku9x9 sudoku_gen(sudoku.GivenGrid);
 			return sudoku_gen;
 		} else if(  status == 4 ){
-			return sudoku;
+			sudoku = old_sudoku;
 		}
-
-		sudoku.InsertRandomDigit();
+		
 		iter++;
 	}
 
