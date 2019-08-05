@@ -564,11 +564,12 @@ Sudoku9x9 Solve(Sudoku9x9 sudoku){
 		while(progress){
 			progress = false;
 
-			// program is looking for rows in which this digit can fit only into exactly 2 places
+			// program is looking for rows/cols in which this digit can fit only into exactly 2 places
 			if ( !IsFilled(sudoku) ) {
 				DifficultyLevel++;
 				// for every digit
 				for (int d = 0; d < 9; d++) {
+					// rows in which this digit can fit only into exactly 2 places:
 					if (progress == true) break;
 					int c1 = 0, c2 = 0;
 					for (int r = 0; r < 9; r++) {
@@ -628,13 +629,7 @@ Sudoku9x9 Solve(Sudoku9x9 sudoku){
 							}
 						}
 					}
-				}
-			}
-			// program is looking for columns in which this digit can fit only into exactly 2 places
-			if ( !IsFilled(sudoku) ) {
-				DifficultyLevel++;
-				// for every digit
-				for (int d = 0; d < 9; d++) {
+					// columns in which this digit can fit only into exactly 2 places:
 					if (progress == true) break;
 					int r1 = 0, r2 = 0;
 					for (int c = 0; c < 9; c++) {
@@ -694,8 +689,11 @@ Sudoku9x9 Solve(Sudoku9x9 sudoku){
 							}
 						}
 					}
+
 				}
+
 			}
+			
 		}
 
 		sudoku.setStatus(2); 		// unsolvable
@@ -724,23 +722,28 @@ Sudoku9x9 Generate(int seed){
 	};
 	Sudoku9x9 sudoku(ZeroGrid), old_sudoku(ZeroGrid);
 	srand(seed);
-	for(int i=0; i<17; i++) sudoku.InsertRandomDigit();
+	
+	int status, iter = 0, iter2 = 0, max_iter = 20, max_iter2 = 100;
+	while( iter2 <= max_iter2 ){
+		Sudoku9x9 sudoku(ZeroGrid);
+		for(int i=0; i<17; i++) sudoku.InsertRandomDigit();
+		iter = 0;
+		while( iter <= max_iter){
+			old_sudoku = sudoku;
+			sudoku.InsertRandomDigit();
 
-	int status, iter = 0, max_iter = 20;
-	while( iter <= max_iter){
-		old_sudoku = sudoku;
-		sudoku.InsertRandomDigit();
-
-		sudoku = Solve(sudoku);
-		status = sudoku.getStatus();
-		if ( status == 1 ){
-			Sudoku9x9 sudoku_gen(sudoku.GivenGrid);
-			return sudoku_gen;
-		} else if(  status == 4 ){
-			sudoku = old_sudoku;
+			sudoku = Solve(sudoku);
+			status = sudoku.getStatus();
+			if ( status == 1 ){
+				Sudoku9x9 sudoku_gen(sudoku.GivenGrid);
+				return sudoku_gen;
+			} else if(  status == 4 ){
+				sudoku = old_sudoku;
+			}
+			
+			iter++;
 		}
-		
-		iter++;
+		iter2++;
 	}
 
 	// function should never reach this point
