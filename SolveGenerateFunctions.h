@@ -726,7 +726,7 @@ Sudoku9x9 Generate(int seed){
 	srand(seed);
 	for(int i=0; i<17; i++) sudoku.InsertRandomDigit();
 
-	int status, iter = 0, max_iter = 100;
+	int status, iter = 0, max_iter = 20;
 	while( iter <= max_iter){
 		old_sudoku = sudoku;
 		sudoku.InsertRandomDigit();
