@@ -85,9 +85,8 @@ bool IsFilled(Sudoku9x9 sudoku) {
 }
 
 Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
-	/* starting with unknown sudoku given, function tries to solve it and returns sudoku with status:
-	solved, unsolvable, ambiguous or conradictory.
-	 */
+	/* Function tries to solve sudoku using only hidden singles 
+	and rows/cols/boxes where certain digit can fit into only one place. */
 
 	// for classic sudoku
 	if( sudoku.getType()==1 ){
@@ -221,9 +220,8 @@ Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
 }
 
 Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
-	/* starting with unknown sudoku given, function tries to solve it and returns sudoku with status:
-	solved, unsolvable, ambiguous or conradictory.
-	 */
+	/* Function tries to solve sudoku using TryToSolveEasy() 
+	and restricting certain rows/cols techniques. */
 
 	// for classic sudoku
 	if( sudoku.getType()==1 ){
@@ -524,6 +522,9 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
 }
 
 Sudoku9x9 Solve(Sudoku9x9 sudoku){
+	/* Main solving function. 
+	Solves sudoku, estimates difficulty and gives appropriate status. */
+
 	// for classic sudoku
 	if( sudoku.getType()==1 ){
 		if( IsContradictory(sudoku) ){
@@ -707,7 +708,9 @@ Sudoku9x9 Solve(Sudoku9x9 sudoku){
 
 Sudoku9x9 Generate(int seed){
 	/* Function generates random sudoku using Solve() function.
-	The result sudoku may be contradictory. */
+	The result sudoku theoretically may be contradictory. 
+	If so, function returns sudoku with an appropriate status.
+	In practise receiving a contradictory sudoku is impossible ( ~3.92e-124 chance ). */
 
 	int ZeroGrid[9][9] = {
 	{ 0,0,0,0,0,0,0,0,0 },
@@ -748,4 +751,25 @@ Sudoku9x9 Generate(int seed){
 
 	// function should never reach this point
 	return sudoku;
+}
+
+void RestrictDigits(Sudoku9x9 &sudoku){
+	int rows[] = {0,1,2,3,4,5,6,7,8};
+	int cols[] = {0,1,2,3,4,5,6,7,8};
+    std::random_shuffle(rows,rows+9);
+	std::random_shuffle(cols,cols+9);
+	
+	for(int r=0;r<9;r++){
+		for(int c=0;c<9;c++){
+			if( sudoku.GivenGrid[rows[r]][cols[c]] != 0 ){
+				Sudoku9x9 S = Sudoku9x9(sudoku.GivenGrid);
+				S.GivenGrid[rows[r]][cols[c]] = 0;
+				S.CurrentGrid[rows[r]][cols[c]] = 0;
+				S = Solve(S);
+				if( S.getStatus() == 1 ){
+					sudoku = Sudoku9x9(S.GivenGrid,S.getType());
+				}
+			}
+		}
+	}
 }
