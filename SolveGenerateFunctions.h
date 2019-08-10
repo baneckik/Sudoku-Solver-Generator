@@ -773,3 +773,22 @@ void RestrictDigits(Sudoku9x9 &sudoku){
 		}
 	}
 }
+
+void Rotate90(Sudoku9x9 &sudoku){
+	int temp;
+	for( int r=0;r<4;r++){
+		for( int c=0;c<5;c++){
+			temp = sudoku.GivenGrid[r][c];
+			sudoku.GivenGrid[r][c] = sudoku.GivenGrid[8-c][r];
+			sudoku.GivenGrid[8-c][r] = sudoku.GivenGrid[8-r][8-c];
+			sudoku.GivenGrid[8-r][8-c] = sudoku.GivenGrid[c][8-r];
+			sudoku.GivenGrid[c][8-r] = temp;
+			temp = sudoku.CurrentGrid[r][c];
+			sudoku.CurrentGrid[r][c] = sudoku.CurrentGrid[8-c][r];
+			sudoku.CurrentGrid[8-c][r] = sudoku.CurrentGrid[8-r][8-c];
+			sudoku.CurrentGrid[8-r][8-c] = sudoku.CurrentGrid[c][8-r];
+			sudoku.CurrentGrid[c][8-r] = temp;
+		}
+	}
+	//sudoku.UpdatePossGrid();
+}
