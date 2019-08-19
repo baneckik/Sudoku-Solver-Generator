@@ -211,7 +211,7 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
             for( int c=0;c<9;c++ ){
                 if( sudoku.GivenGrid[r][c] != 0 ){
                     digit->setNum(sudoku.GivenGrid[r][c]);
-                    painter.drawText(startX+size*r+size/4,startY+size*c+3*size/4,*digit);
+                    painter.drawText(startX+size*r+size*30/100,startY+size*c+78*size/100,*digit);
                 }
             }
         }
