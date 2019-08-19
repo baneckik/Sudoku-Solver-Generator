@@ -135,17 +135,18 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
 
 
     srand( time(NULL) );
+    //int seed = 1751815565; // generating seed
     int seed = rand(); // generating seed
     QPainter painter(&pdfWriter);
     int size = 450; // single cell size
-    int X = 100, Y = 200, startX, startY; // top left corner coordinates of sudoku
+    int X = 300, Y = 250, startX, startY; // top left corner coordinates of sudoku
 
     QPen MainBoxPen(Qt::black, 20, Qt::SolidLine);
     QPen SmallBoxPen(Qt::black, 1, Qt::SolidLine);
 
     for(int iter=0; iter<6; iter++ ){
         startX = X + (iter%2)*11*size;
-        startY = Y + (iter%3)*10*size;
+        startY = Y + (iter/2)*10*size;
 
         painter.setPen(MainBoxPen);
         painter.drawRect(startX,startY,9*size,9*size);
@@ -201,6 +202,7 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
         }
         */
 
+        //sudoku = Solve(sudoku);
 
         QFont digitFont = painter.font();
         digitFont.setPointSize(digitFont.pointSize()*2);
@@ -209,12 +211,19 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
 
         for( int r=0;r<9;r++){
             for( int c=0;c<9;c++ ){
-                if( sudoku.GivenGrid[r][c] != 0 ){
-                    digit->setNum(sudoku.GivenGrid[r][c]);
+                if( sudoku.CurrentGrid[r][c] != 0 ){
+                    digit->setNum(sudoku.CurrentGrid[r][c]);
+                    if ( sudoku.CurrentGrid[r][c] == sudoku.GivenGrid[r][c] ){
+                        painter.setOpacity(1);
+                    }else {
+                        painter.setOpacity(0.5);
+                    }
                     painter.drawText(startX+size*r+size*30/100,startY+size*c+78*size/100,*digit);
                 }
             }
         }
+        painter.setOpacity(1);
+
 
         digitFont.setPointSize(digitFont.pointSize()/2);
         painter.setFont(digitFont);
