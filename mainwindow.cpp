@@ -143,10 +143,22 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
 
     QPen MainBoxPen(Qt::black, 20, Qt::SolidLine);
     QPen SmallBoxPen(Qt::black, 1, Qt::SolidLine);
+    QPen DiagonalPen(Qt::gray, 30, Qt::DashLine);
+
 
     for(int iter=0; iter<6; iter++ ){
+
+        Sudoku9x9 sudoku = Generate(seed+iter,2);
+        RestrictDigits(sudoku);
+
         startX = X + (iter%2)*11*size;
         startY = Y + (iter/2)*10*size;
+
+        if ( sudoku.getType()==2 ){
+            painter.setPen(DiagonalPen);
+            painter.drawLine(startX,startY,startX+9*size,startY+9*size);
+            painter.drawLine(startX,startY+9*size,startX+9*size,startY);
+        }
 
         painter.setPen(MainBoxPen);
         painter.drawRect(startX,startY,9*size,9*size);
@@ -161,11 +173,19 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
         painter.drawRect(startX,startY+4*size,9*size,size);
         painter.drawRect(startX,startY+7*size,9*size,size);
 
-        painter.drawText(startX+size*6,startY-110,"Type: Classic");
-        painter.drawText(startX+size*3,startY+size*9+150,"seed=" + QString::number(seed+iter));
+        QString s("Type: Unknown");
+        if( sudoku.getType()==1 )
+            s="Type: Classic";
+        else if( sudoku.getType()==2 )
+            s="Type: Diagonal";
+        else if( sudoku.getType()==3 )
+            s="Type: Non-Con";
+        else if( sudoku.getType()==4 )
+            s="Type: Anti-Knight";
 
-        Sudoku9x9 sudoku = Generate(seed+iter);
-        RestrictDigits(sudoku);
+
+        painter.drawText(startX+size*6,startY-110,s);
+        painter.drawText(startX+size*3,startY+size*9+150,"seed=" + QString::number(seed+iter));
 
         for (int i=0;i<sudoku.getDifficulty();i++){
             QPolygon star;
@@ -216,7 +236,7 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
                     if ( sudoku.CurrentGrid[r][c] == sudoku.GivenGrid[r][c] ){
                         painter.setOpacity(1);
                     }else {
-                        painter.setOpacity(0.5);
+                        painter.setOpacity(0.4);
                     }
                     painter.drawText(startX+size*r+size*30/100,startY+size*c+78*size/100,*digit);
                 }
