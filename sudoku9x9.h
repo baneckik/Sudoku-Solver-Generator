@@ -9,19 +9,23 @@ class Sudoku9x9{
         int Type;       // 1 - Classic, 2 - Nonconsecutive, 3 - Diagonal, 4 - AntiKnight
         int Status;     // 0 - Unknown, 1 - Solved, 2 - Unsolvable(by this solver), 3 - Ambiguous, 4 - Contradictionary
         int Difficulty; // 0 - Unknown, 1 - Very Easy, 2 - Easy, 3 - Hard, 4 - Very Hard
+        int Seed;       // only if sudoku is generated, otherwise equals 0
     public:
         int GivenGrid[9][9];        // [row][column]
         int CurrentGrid[9][9];      // [row][column]
         bool PossibilitiesGrid[9][9][9];     // [row][column][digit]
 
         Sudoku9x9(int Given[9][9], int type = 1);
+        Sudoku9x9(Sudoku9x9 &sudoku);
 
         int getType(){return Type;}
         int getStatus(){return Status;}
         int getDifficulty(){return Difficulty;}
+        int getSeed(){return Seed;}
 
         void setStatus(int s){Status = s;}
         void setDifficulty(int d){Difficulty = d;}
+        void setSeed(int s){Seed = s;}
 
         int N_Given();     // number of digits given
         int N_Current();   // number of digits currently placed on the grid
@@ -37,14 +41,6 @@ class Sudoku9x9{
 
 #endif
 
-int TotalPoss(bool Possibilities[9][9][9], int d, int r1, int c1, int r2, int c2) {
-    int suma = 0;
-    for (int r = r1; r <= r2; r++)
-        for (int c = c1; c <= c2; c++)
-            suma += Possibilities[r][c][d];
-    return suma;
-}
-
 Sudoku9x9::Sudoku9x9(int Given[9][9], int type) : Type(type) {
     for (int i = 0; i < 9; i++)
         for (int j = 0; j < 9; j++) {
@@ -55,9 +51,37 @@ Sudoku9x9::Sudoku9x9(int Given[9][9], int type) : Type(type) {
         for (int j = 0; j < 9; j++)
             for (int k = 0; k < 9; k++)
                 PossibilitiesGrid[i][j][k] = 1;
+    UpdatePossGrid();
     Status = 0;
     Difficulty = 0;
+    Seed = 0;
 }
+
+Sudoku9x9::Sudoku9x9(Sudoku9x9 &sudoku) : Type(sudoku.getType()),
+                                        Difficulty(sudoku.getDifficulty()),
+                                        Seed(sudoku.getSeed())
+{
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++) {
+            GivenGrid[i][j] = sudoku.GivenGrid[i][j];
+            CurrentGrid[i][j] = sudoku.GivenGrid[i][j];
+        }
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++)
+            for (int k = 0; k < 9; k++)
+                PossibilitiesGrid[i][j][k] = 1;
+    UpdatePossGrid();
+    Status = 0;
+}
+
+int TotalPoss(bool Possibilities[9][9][9], int d, int r1, int c1, int r2, int c2) {
+    int suma = 0;
+    for (int r = r1; r <= r2; r++)
+        for (int c = c1; c <= c2; c++)
+            suma += Possibilities[r][c][d];
+    return suma;
+}
+
 
 int Sudoku9x9::N_Given(){
     int sum = 0;
