@@ -6,7 +6,7 @@
 
 class Sudoku9x9{
     private:
-        int Type;       // 1 - Classic, 2 - Nonconsecutive, 3 - Diagonal, 4 - AntiKnight
+        int Type;       // 1 - Classic, 2 - Diagonal, 3 - Nonconsecutive, 4 - AntiKnight
         int Status;     // 0 - Unknown, 1 - Solved, 2 - Unsolvable(by this solver), 3 - Ambiguous, 4 - Contradictionary
         int Difficulty; // 0 - Unknown, 1 - Very Easy, 2 - Easy, 3 - Hard, 4 - Very Hard
         int Seed;       // only if sudoku is generated, otherwise equals 0
@@ -16,7 +16,7 @@ class Sudoku9x9{
         bool PossibilitiesGrid[9][9][9];     // [row][column][digit]
 
         Sudoku9x9(int Given[9][9], int type = 1);
-        Sudoku9x9(Sudoku9x9 &sudoku);
+        //Sudoku9x9(Sudoku9x9 &sudoku);
 
         int getType(){return Type;}
         int getStatus(){return Status;}
@@ -51,12 +51,12 @@ Sudoku9x9::Sudoku9x9(int Given[9][9], int type) : Type(type) {
         for (int j = 0; j < 9; j++)
             for (int k = 0; k < 9; k++)
                 PossibilitiesGrid[i][j][k] = 1;
-    UpdatePossGrid();
     Status = 0;
     Difficulty = 0;
     Seed = 0;
 }
 
+/*
 Sudoku9x9::Sudoku9x9(Sudoku9x9 &sudoku) : Type(sudoku.getType()),
                                         Difficulty(sudoku.getDifficulty()),
                                         Seed(sudoku.getSeed())
@@ -73,6 +73,7 @@ Sudoku9x9::Sudoku9x9(Sudoku9x9 &sudoku) : Type(sudoku.getType()),
     UpdatePossGrid();
     Status = 0;
 }
+*/
 
 int TotalPoss(bool Possibilities[9][9][9], int d, int r1, int c1, int r2, int c2) {
     int suma = 0;
