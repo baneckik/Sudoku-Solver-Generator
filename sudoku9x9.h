@@ -172,6 +172,76 @@ void Sudoku9x9::UpdatePossGrid(){
         }
     }
 
+    // only for Diagonal sudoku
+    if( getType() == 2 ){
+        for(int c=0;c<9;c++){
+            //first main diagonal
+            if (CurrentGrid[c][c] != 0){
+                int D = CurrentGrid[c][c];
+                for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
+                    PossibilitiesGrid[c2][c2][D-1] = false;
+                }
+            }
+            //second main diagonal
+            if (CurrentGrid[8-c][c] != 0){
+                int D = CurrentGrid[8-c][c];
+                for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
+                    PossibilitiesGrid[8-c2][c2][D-1] = false;
+                }
+            }
+
+        }
+    }
+
+    // Only for Non-Consecutive sudoku
+    if( getType() == 3 ){
+
+        for(int r=0; r<9; r++){
+            for(int c=0; c<9; c++){
+                if( CurrentGrid[r][c] != 0 ){
+                    int D = CurrentGrid[r][c];
+                    // eliminating possibilities from the place to the left:
+                    if( r != 0 ){
+                        if( D != 1 ){
+                                PossibilitiesGrid[r-1][c][D-2] = false;
+                        }
+                        if( D != 9 ){
+                                PossibilitiesGrid[r-1][c][D] = false;
+                        }
+                    }
+                    // eliminating possibilities from the place to the right:
+                    if( r != 8 ){
+                        if( D != 1 ){
+                                PossibilitiesGrid[r+1][c][D-2] = false;
+                        }
+                        if( D != 9 ){
+                                PossibilitiesGrid[r+1][c][D] = false;
+                        }
+                    }
+                    // eliminating possibilities from the place to the top:
+                    if( c != 0 ){
+                        if( D != 1 ){
+                                PossibilitiesGrid[r][c-1][D-2] = false;
+                        }
+                        if( D != 9 ){
+                                PossibilitiesGrid[r][c-1][D] = false;
+                        }
+                    }
+                    // eliminating possibilities from the place to the top:
+                    if( c != 8 ){
+                        if( D != 1 ){
+                                PossibilitiesGrid[r][c+1][D-2] = false;
+                        }
+                        if( D != 9 ){
+                                PossibilitiesGrid[r][c+1][D] = false;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
     // trick 1
 
     // horizontally
@@ -273,7 +343,6 @@ bool Sudoku9x9::InsertRandomDigit(){
 
     UpdatePossGrid();
 
-    //srand(seed);
     int r=10, c=10, iter=0, max_iter=100;
     do{
         r = rand()%9;

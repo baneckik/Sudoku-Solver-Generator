@@ -82,6 +82,52 @@ bool IsContradictory(Sudoku9x9 sudoku){
         if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
     }
 
+    // only for Non-Consecutive sudoku
+    if( sudoku.getType() == 3 ){
+        for(int r=0; r<9; r++){
+            for(int c=0; c<9; c++){
+                if( sudoku.CurrentGrid[r][c] != 0 ){
+                    int D = sudoku.CurrentGrid[r][c];
+                    if( r != 0 ){
+                        if( D != 1 ){
+                            if ( sudoku.CurrentGrid[r-1][c] == D-1 ) return true;
+                        }
+                        if( D != 9 ){
+                            if ( sudoku.CurrentGrid[r-1][c] == D+1 ) return true;
+                        }
+                    }
+                    if( r != 8 ){
+                        if( D != 1 ){
+                            if ( sudoku.CurrentGrid[r+1][c] == D-1 ) return true;
+                        }
+                        if( D != 9 ){
+                            if ( sudoku.CurrentGrid[r+1][c] == D+1 ) return true;
+                        }
+                    }
+                    // eliminating possibilities from the place to the top:
+                    if( c != 0 ){
+                        if( D != 1 ){
+                            if ( sudoku.CurrentGrid[r][c-1] == D-1 ) return true;
+                        }
+                        if( D != 9 ){
+                            if ( sudoku.CurrentGrid[r][c-1] == D+1 ) return true;
+                        }
+                    }
+                    // eliminating possibilities from the place to the top:
+                    if( c != 8 ){
+                        if( D != 1 ){
+                            if ( sudoku.CurrentGrid[r][c+1] == D-1 ) return true;
+                        }
+                        if( D != 9 ){
+                            if ( sudoku.CurrentGrid[r][c+1] == D+1 ) return true;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
     return false;
 }
 
@@ -180,6 +226,79 @@ Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
                     }
                 }
 
+            }
+        }
+
+        // Only for Non-Consecutive sudoku
+        if( sudoku.getType() == 3 ){
+
+            for(int r=0; r<9; r++){
+                for(int c=0; c<9; c++){
+                    if( sudoku.CurrentGrid[r][c] != 0 ){
+                        int D = sudoku.CurrentGrid[r][c];
+                        // eliminating possibilities from the place to the top:
+                        if( r != 0 ){
+                            if( D != 1 ){
+                                if (sudoku.PossibilitiesGrid[r-1][c][D-2] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r-1][c][D-2] = false;
+                                }
+                            }
+                            if( D != 9 ){
+                                if (sudoku.PossibilitiesGrid[r-1][c][D] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r-1][c][D] = false;
+                                }
+                            }
+                        }
+                        // eliminating possibilities from the place to the bottom:
+                        if( r != 8 ){
+                            if( D != 1 ){
+                                if (sudoku.PossibilitiesGrid[r+1][c][D-2] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r+1][c][D-2] = false;
+                                }
+                            }
+                            if( D != 9 ){
+                                if (sudoku.PossibilitiesGrid[r+1][c][D] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r+1][c][D] = false;
+                                }
+                            }
+                        }
+                        // eliminating possibilities from the place to the left:
+                        if( c != 0 ){
+                            if( D != 1 ){
+                                if (sudoku.PossibilitiesGrid[r][c-1][D-2] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r][c-1][D-2] = false;
+                                }
+                            }
+                            if( D != 9 ){
+                                if (sudoku.PossibilitiesGrid[r][c-1][D] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r][c-1][D] = false;
+                                }
+                            }
+                        }
+                        // eliminating possibilities from the place to the right:
+                        if( c != 8 ){
+                            if( D != 1 ){
+                                if (sudoku.PossibilitiesGrid[r][c+1][D-2] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r][c+1][D-2] = false;
+                                }
+                            }
+                            if( D != 9 ){
+                                if (sudoku.PossibilitiesGrid[r][c+1][D] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r][c+1][D] = false;
+                                }
+                            }
+                        }
+
+                    }
+                }
             }
         }
 
@@ -342,6 +461,78 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
                     }
                 }
 
+            }
+        }
+
+        // Only for Non-Consecutive sudoku
+        if( sudoku.getType() == 3 ){
+
+            for(int r=0; r<9; r++){
+                for(int c=0; c<9; c++){
+                    if( sudoku.CurrentGrid[r][c] != 0 ){
+                        int D = sudoku.CurrentGrid[r][c];
+                        // eliminating possibilities from the place to the top:
+                        if( r != 0 ){
+                            if( D != 1 ){
+                                if (sudoku.PossibilitiesGrid[r-1][c][D-2] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r-1][c][D-2] = false;
+                                }
+                            }
+                            if( D != 9 ){
+                                if (sudoku.PossibilitiesGrid[r-1][c][D] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r-1][c][D] = false;
+                                }
+                            }
+                        }
+                        // eliminating possibilities from the place to the bottom:
+                        if( r != 8 ){
+                            if( D != 1 ){
+                                if (sudoku.PossibilitiesGrid[r+1][c][D-2] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r+1][c][D-2] = false;
+                                }
+                            }
+                            if( D != 9 ){
+                                if (sudoku.PossibilitiesGrid[r+1][c][D] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r+1][c][D] = false;
+                                }
+                            }
+                        }
+                        // eliminating possibilities from the place to the left:
+                        if( c != 0 ){
+                            if( D != 1 ){
+                                if (sudoku.PossibilitiesGrid[r][c-1][D-2] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r][c-1][D-2] = false;
+                                }
+                            }
+                            if( D != 9 ){
+                                if (sudoku.PossibilitiesGrid[r][c-1][D] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r][c-1][D] = false;
+                                }
+                            }
+                        }
+                        // eliminating possibilities from the place to the right:
+                        if( c != 8 ){
+                            if( D != 1 ){
+                                if (sudoku.PossibilitiesGrid[r][c+1][D-2] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r][c+1][D-2] = false;
+                                }
+                            }
+                            if( D != 9 ){
+                                if (sudoku.PossibilitiesGrid[r][c+1][D] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[r][c+1][D] = false;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -813,7 +1004,7 @@ Sudoku9x9 Generate(int seed,int type){
     }
 
     // function should never reach this point
-    sudoku.setSeed(seed);
+    sudoku.setSeed(123);
     return sudoku;
 }
 
