@@ -148,7 +148,7 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
 
     for(int iter=0; iter<6; iter++ ){
 
-        Sudoku9x9 sudoku = Generate(seed+iter,2);
+        Sudoku9x9 sudoku = Generate(seed+iter,iter%2+1);
         RestrictDigits(sudoku);
 
         startX = X + (iter%2)*11*size;
@@ -184,8 +184,7 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
             s="Type: Anti-Knight";
 
         painter.drawText(startX+size*6,startY-110,s);
-        //painter.drawText(startX+size*3,startY+size*9+150,"seed=" + QString::number(sudoku.getSeed()));
-        painter.drawText(startX+size*3,startY+size*9+150,"seed=" + QString::number(seed+iter));
+        painter.drawText(startX+size*3,startY+size*9+150,"seed=" + QString::number(sudoku.getSeed()));
 
         for (int i=0;i<sudoku.getDifficulty();i++){
             QPolygon star;
@@ -203,24 +202,6 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
 
             painter.drawPolygon(star2);
         }
-        /*
-        for (int i=0;i<sudoku.getDifficulty();i++){
-            QPolygon star;
-            star << QPoint(26*i+startX+4, startY-4) << QPoint(26*i+startX+7, startY-12)
-                 << QPoint(26*i+startX+2, startY-18) << QPoint(26*i+startX+8, startY-18)
-                 << QPoint(26*i+startX+12, startY-26)
-                 << QPoint(26*i+startX+16, startY-18) << QPoint(26*i+startX+22, startY-18)
-                 << QPoint(26*i+startX+17, startY-12) << QPoint(26*i+startX+20, startY-4)
-                 << QPoint(26*i+startX+12, startY-10);
-            int scaleFactor = 10;
-            QTransform trans;
-            trans.translate(-(scaleFactor-1)*(startX+2),-(scaleFactor-1)*(startY+2));
-            trans=trans.scale(scaleFactor,scaleFactor);
-            QPolygon star2=trans.map(star);
-
-            painter.drawPolygon(star2);
-        }
-        */
 
         //sudoku = Solve(sudoku);
 
