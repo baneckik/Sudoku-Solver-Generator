@@ -792,7 +792,7 @@ Sudoku9x9 Generate(int seed,int type){
         Sudoku9x9 sudoku(ZeroGrid,type);
         for(int i=0; i<17; i++) sudoku.InsertRandomDigit();
         iter = 0;
-        while( iter <= max_iter){
+        while( iter <= max_iter ){
             old_sudoku = sudoku;
             sudoku.InsertRandomDigit();
 
@@ -801,7 +801,7 @@ Sudoku9x9 Generate(int seed,int type){
             if ( status == 1 ){
                 Sudoku9x9 sudoku_gen(sudoku.GivenGrid,type);
                 sudoku_gen.setDifficulty(sudoku.getDifficulty());
-                sudoku.setSeed(seed);
+                sudoku_gen.setSeed(seed);
                 return sudoku_gen;
             } else if(  status == 4 ){
                 sudoku = old_sudoku;
@@ -813,6 +813,7 @@ Sudoku9x9 Generate(int seed,int type){
     }
 
     // function should never reach this point
+    sudoku.setSeed(seed);
     return sudoku;
 }
 
@@ -825,13 +826,15 @@ void RestrictDigits(Sudoku9x9 &sudoku){
     for(int r=0;r<9;r++){
         for(int c=0;c<9;c++){
             if( sudoku.GivenGrid[rows[r]][cols[c]] != 0 ){
-                Sudoku9x9 S = Sudoku9x9(sudoku.GivenGrid);
+                Sudoku9x9 S = Sudoku9x9(sudoku.GivenGrid,sudoku.getType());
+                S.setSeed(sudoku.getSeed());
                 S.GivenGrid[rows[r]][cols[c]] = 0;
                 S.CurrentGrid[rows[r]][cols[c]] = 0;
                 S = Solve(S);
                 if( S.getStatus() == 1 ){
                     sudoku = Sudoku9x9(S.GivenGrid,S.getType());
                     sudoku.setDifficulty(S.getDifficulty());
+                    sudoku.setSeed(S.getSeed());
                 }
             }
         }
