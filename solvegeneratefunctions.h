@@ -82,6 +82,52 @@ bool IsContradictory(Sudoku9x9 sudoku){
         if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
     }
 
+    // only for Non-Consecutive sudoku
+    if( sudoku.getType() == 3 ){
+        for(int r=0; r<9; r++){
+            for(int c=0; c<9; c++){
+                if( sudoku.CurrentGrid[r][c] != 0 ){
+                    int D = sudoku.CurrentGrid[r][c];
+                    if( r != 0 ){
+                        if( D != 1 ){
+                            if ( sudoku.CurrentGrid[r-1][c] == D-1 ) return true;
+                        }
+                        if( D != 9 ){
+                            if ( sudoku.CurrentGrid[r-1][c] == D+1 ) return true;
+                        }
+                    }
+                    if( r != 8 ){
+                        if( D != 1 ){
+                            if ( sudoku.CurrentGrid[r+1][c] == D-1 ) return true;
+                        }
+                        if( D != 9 ){
+                            if ( sudoku.CurrentGrid[r+1][c] == D+1 ) return true;
+                        }
+                    }
+                    // eliminating possibilities from the place to the top:
+                    if( c != 0 ){
+                        if( D != 1 ){
+                            if ( sudoku.CurrentGrid[r][c-1] == D-1 ) return true;
+                        }
+                        if( D != 9 ){
+                            if ( sudoku.CurrentGrid[r][c-1] == D+1 ) return true;
+                        }
+                    }
+                    // eliminating possibilities from the place to the top:
+                    if( c != 8 ){
+                        if( D != 1 ){
+                            if ( sudoku.CurrentGrid[r][c+1] == D-1 ) return true;
+                        }
+                        if( D != 9 ){
+                            if ( sudoku.CurrentGrid[r][c+1] == D+1 ) return true;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
     return false;
 }
 
@@ -92,6 +138,285 @@ bool IsFilled(Sudoku9x9 sudoku) {
             suma += sudoku.CurrentGrid[r][c];
     if (suma != 45 * 9) return false;
     return true;
+}
+
+void UpdatePossGrid_Diag(Sudoku9x9 &sudoku, bool &progress){
+    /* Function updates the PossGrid of given sudoku using Diagonal sudoku rules only.
+    It is only a suplementation for UpdatePossGrid method.
+    It does not updates PossGrid using standard classic sudoku rules! */
+    for(int c=0;c<9;c++){
+        //first main diagonal
+        if (sudoku.CurrentGrid[c][c] != 0){
+            int D = sudoku.CurrentGrid[c][c];
+            for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
+                if (sudoku.PossibilitiesGrid[c2][c2][D-1] == true) {
+                    progress = true;
+                    sudoku.PossibilitiesGrid[c2][c2][D-1] = false;
+                }
+            }
+        }
+        //second main diagonal
+        if (sudoku.CurrentGrid[8-c][c] != 0){
+            int D = sudoku.CurrentGrid[8-c][c];
+            for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
+                if (sudoku.PossibilitiesGrid[8-c2][c2][D-1] == true) {
+                    progress = true;
+                    sudoku.PossibilitiesGrid[8-c2][c2][D-1] = false;
+                }
+            }
+        }
+    }
+}
+
+void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
+    /* Function updates the PossGrid of given sudoku using Non-Consecutive sudoku rules only.
+    It is only a suplementation for UpdatePossGrid method.
+    It does not updates PossGrid using standard classic sudoku rules! */
+    if(sudoku.getType() != 3) return;
+
+    // standard updating
+    // when we have a given 5 digit then adjacent cells cannot contain 4 or 6.
+    for(int r=0; r<9; r++){
+        for(int c=0; c<9; c++){
+            if( sudoku.CurrentGrid[r][c] != 0 ){
+                int D = sudoku.CurrentGrid[r][c];
+                // eliminating possibilities from the place to the top:
+                if( r != 0 ){
+                    if( D != 1 ){
+                        if (sudoku.PossibilitiesGrid[r-1][c][D-2] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r-1][c][D-2] = false;
+                        }
+                    }
+                    if( D != 9 ){
+                        if (sudoku.PossibilitiesGrid[r-1][c][D] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r-1][c][D] = false;
+                        }
+                    }
+                }
+                // eliminating possibilities from the place to the bottom:
+                if( r != 8 ){
+                    if( D != 1 ){
+                        if (sudoku.PossibilitiesGrid[r+1][c][D-2] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r+1][c][D-2] = false;
+                        }
+                    }
+                    if( D != 9 ){
+                        if (sudoku.PossibilitiesGrid[r+1][c][D] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r+1][c][D] = false;
+                        }
+                    }
+                }
+                // eliminating possibilities from the place to the left:
+                if( c != 0 ){
+                    if( D != 1 ){
+                        if (sudoku.PossibilitiesGrid[r][c-1][D-2] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][c-1][D-2] = false;
+                        }
+                    }
+                    if( D != 9 ){
+                        if (sudoku.PossibilitiesGrid[r][c-1][D] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][c-1][D] = false;
+                        }
+                    }
+                }
+                // eliminating possibilities from the place to the right:
+                if( c != 8 ){
+                    if( D != 1 ){
+                        if (sudoku.PossibilitiesGrid[r][c+1][D-2] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][c+1][D-2] = false;
+                        }
+                    }
+                    if( D != 9 ){
+                        if (sudoku.PossibilitiesGrid[r][c+1][D] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][c+1][D] = false;
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    // Elimination technique nr 1:
+    // when in certain place can go only 4,5,6, then in adjacent places cannot be 5.
+    for( int r=0; r<8; r++ ){
+        for( int c=0; c<9; c++ ){
+            if( sudoku.CurrentGrid[r][c] == 0 ){
+                for( int d=1; d<8; d++ ){
+                    // d - central digit (out of three)
+                    int sum = 0;
+                    for( int d1=0; d1<d-1; d1++ ){
+                        if( sudoku.PossibilitiesGrid[r][c][d1] == true ){ sum++; break; }
+                    }
+                    for( int d1=d+2; d1<9; d1++ ){
+                        if( sudoku.PossibilitiesGrid[r][c][d1] == true ) { sum++; break; }
+                    }
+                    if( sum == 0 ){
+                        if( r != 0 )
+                            sudoku.PossibilitiesGrid[r-1][c][d] = false;
+                        if( r != 8 )
+                            sudoku.PossibilitiesGrid[r+1][c][d] = false;
+                        if( c != 0 )
+                            sudoku.PossibilitiesGrid[r][c-1][d] = false;
+                        if( c != 8 )
+                            sudoku.PossibilitiesGrid[r][c+1][d] = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // Elimination technique nr 2:
+    // when in certain place can go only 4,5, then in adjacent places cannot be 4 nor 5.
+    for( int r=0; r<8; r++ ){
+        for( int c=0; c<9; c++ ){
+            if( sudoku.CurrentGrid[r][c] == 0 ){
+                for( int d=0; d<8; d++ ){
+                    // d - lower digit (out of two)
+                    int sum = 0;
+                    for( int d1=0; d1<d; d1++ ){
+                        if( sudoku.PossibilitiesGrid[r][c][d1] == true ){ sum++; break; }
+                    }
+                    for( int d1=d+2; d1<9; d1++ ){
+                        if( sudoku.PossibilitiesGrid[r][c][d1] == true ) { sum++; break; }
+                    }
+                    if( sum == 0 ){
+                        if( r != 0 ){
+                            sudoku.PossibilitiesGrid[r-1][c][d] = false;
+                            sudoku.PossibilitiesGrid[r-1][c][d+1] = false;
+                        }
+                        if( r != 8 ){
+                            sudoku.PossibilitiesGrid[r+1][c][d] = false;
+                            sudoku.PossibilitiesGrid[r+1][c][d+1] = false;
+                        }
+                        if( c != 0 ){
+                            sudoku.PossibilitiesGrid[r][c-1][d] = false;
+                            sudoku.PossibilitiesGrid[r][c-1][d+1] = false;
+                        }
+                        if( c != 8 ){
+                            sudoku.PossibilitiesGrid[r][c+1][d] = false;
+                            sudoku.PossibilitiesGrid[r][c+1][d+1] = false;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // Elimination technique nr 3:
+    // when in certain row/col 5 can fit only into three consecutive places,
+    // 4 and 6 cannot be in the middle.
+    for( int r=0; r<9; r++ ){
+        for( int d=0; d<9; d++){
+            for( int c=1; c<8; c++ ){
+                // c - central column (out of three)
+                if( sudoku.CurrentGrid[r][c] == 0 ){
+                    int sum = 0;
+                    for( int c1=0; c1<c-1; c1++ ){
+                        if( sudoku.PossibilitiesGrid[r][c1][d] == true ){ sum++; break; }
+                    }
+                    for( int c1=c+2; c1<9; c1++ ){
+                        if( sudoku.PossibilitiesGrid[r][c1][d] == true ) { sum++; break; }
+                    }
+                    if( sum == 0 ){
+                        if( d != 0 )
+                            sudoku.PossibilitiesGrid[r][c][d-1] = false;
+                        if( d != 8 )
+                            sudoku.PossibilitiesGrid[r][c][d+1] = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    for( int c=0; c<9; c++ ){
+        for( int d=0; d<9; d++){
+            for( int r=1; r<8; r++ ){
+                // r - central row (out of three)
+                if( sudoku.CurrentGrid[r][c] == 0 ){
+                    int sum = 0;
+                    for( int r1=0; r1<r-1; r1++ ){
+                        if( sudoku.PossibilitiesGrid[r1][c][d] == true ){ sum++; break; }
+                    }
+                    for( int r1=r+2; r1<9; r1++ ){
+                        if( sudoku.PossibilitiesGrid[r1][c][d] == true ) { sum++; break; }
+                    }
+                    if( sum == 0 ){
+                        if( d != 0 )
+                            sudoku.PossibilitiesGrid[r][c][d-1] = false;
+                        if( d != 8 )
+                            sudoku.PossibilitiesGrid[r][c][d+1] = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // Elimination technique nr 4:
+    // when in certain row/col 5 can fit only into two consecutive places,
+    // 4 and 6 cannot be in any of them.
+    for( int r=0; r<9; r++ ){
+        for( int d=0; d<9; d++){
+            for( int c=0; c<8; c++ ){
+                // c - left column (out of two)
+                if( sudoku.CurrentGrid[r][c] == 0 ){
+                    int sum = 0;
+                    for( int c1=0; c1<c; c1++ ){
+                        if( sudoku.PossibilitiesGrid[r][c1][d] == true ){ sum++; break; }
+                    }
+                    for( int c1=c+2; c1<9; c1++ ){
+                        if( sudoku.PossibilitiesGrid[r][c1][d] == true ) { sum++; break; }
+                    }
+                    if( sum == 0 ){
+                        if( d != 0 ){
+                            sudoku.PossibilitiesGrid[r][c][d-1] = false;
+                            sudoku.PossibilitiesGrid[r][c+1][d-1] = false;
+                        }
+                        if( d != 8 ){
+                            sudoku.PossibilitiesGrid[r][c][d+1] = false;
+                            sudoku.PossibilitiesGrid[r][c+1][d+1] = false;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    for( int c=0; c<9; c++ ){
+        for( int d=0; d<9; d++){
+            for( int r=0; r<8; r++ ){
+                // r - left row (out of two)
+                if( sudoku.CurrentGrid[r][c] == 0 ){
+                    int sum = 0;
+                    for( int r1=0; r1<r; r1++ ){
+                        if( sudoku.PossibilitiesGrid[r1][c][d] == true ){ sum++; break; }
+                    }
+                    for( int r1=r+2; r1<9; r1++ ){
+                        if( sudoku.PossibilitiesGrid[r1][c][d] == true ) { sum++; break; }
+                    }
+                    if( sum == 0 ){
+                        if( d != 0 ){
+                            sudoku.PossibilitiesGrid[r][c][d-1] = false;
+                            sudoku.PossibilitiesGrid[r+1][c][d-1] = false;
+                        }
+                        if( d != 8 ){
+                            sudoku.PossibilitiesGrid[r][c][d+1] = false;
+                            sudoku.PossibilitiesGrid[r+1][c][d+1] = false;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
@@ -158,29 +483,12 @@ Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
 
         // only for Diagonal sudoku
         if( sudoku.getType() == 2 ){
-            for(int c=0;c<9;c++){
-                //first main diagonal
-                if (sudoku.CurrentGrid[c][c] != 0){
-                    int D = sudoku.CurrentGrid[c][c];
-                    for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
-                        if (sudoku.PossibilitiesGrid[c2][c2][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[c2][c2][D-1] = false;
-                        }
-                    }
-                }
-                //second main diagonal
-                if (sudoku.CurrentGrid[8-c][c] != 0){
-                    int D = sudoku.CurrentGrid[8-c][c];
-                    for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
-                        if (sudoku.PossibilitiesGrid[8-c2][c2][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[8-c2][c2][D-1] = false;
-                        }
-                    }
-                }
+            UpdatePossGrid_Diag(sudoku,progress);
+        }
 
-            }
+        // Only for Non-Consecutive sudoku
+        if( sudoku.getType() == 3 ){
+            UpdatePossGrid_NonCon(sudoku,progress);
         }
 
 
@@ -320,29 +628,12 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
 
         // only for Diagonal sudoku
         if( sudoku.getType() == 2 ){
-            for(int c=0;c<9;c++){
-                //first main diagonal
-                if (sudoku.CurrentGrid[c][c] != 0){
-                    int D = sudoku.CurrentGrid[c][c];
-                    for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
-                        if (sudoku.PossibilitiesGrid[c2][c2][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[c2][c2][D-1] = false;
-                        }
-                    }
-                }
-                //second main diagonal
-                if (sudoku.CurrentGrid[8-c][c] != 0){
-                    int D = sudoku.CurrentGrid[8-c][c];
-                    for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
-                        if (sudoku.PossibilitiesGrid[8-c2][c2][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[8-c2][c2][D-1] = false;
-                        }
-                    }
-                }
+            UpdatePossGrid_Diag(sudoku,progress);
+        }
 
-            }
+        // Only for Non-Consecutive sudoku
+        if( sudoku.getType() == 3 ){
+            UpdatePossGrid_NonCon(sudoku,progress);
         }
 
         // trick 1
@@ -790,7 +1081,9 @@ Sudoku9x9 Generate(int seed,int type){
     int status, iter = 0, iter2 = 0, max_iter = 20, max_iter2 = 100;
     while( iter2 <= max_iter2 ){
         Sudoku9x9 sudoku(ZeroGrid,type);
-        for(int i=0; i<17; i++) sudoku.InsertRandomDigit();
+        int startingDigits = 17;
+        if( type == 3 ) startingDigits = 2;
+        for(int i=0; i<startingDigits; i++) sudoku.InsertRandomDigit();
         iter = 0;
         while( iter <= max_iter ){
             old_sudoku = sudoku;
@@ -798,6 +1091,8 @@ Sudoku9x9 Generate(int seed,int type){
 
             sudoku = Solve(sudoku);
             status = sudoku.getStatus();
+            //sudoku.PrintToConsole();
+            //cout<<"------------------"<<status<<"\n";
             if ( status == 1 ){
                 Sudoku9x9 sudoku_gen(sudoku.GivenGrid,type);
                 sudoku_gen.setDifficulty(sudoku.getDifficulty());
@@ -813,7 +1108,7 @@ Sudoku9x9 Generate(int seed,int type){
     }
 
     // function should never reach this point
-    sudoku.setSeed(seed);
+    sudoku.setSeed(123);
     return sudoku;
 }
 
@@ -837,6 +1132,26 @@ void RestrictDigits(Sudoku9x9 &sudoku){
                     sudoku.setSeed(S.getSeed());
                 }
             }
+        }
+    }
+}
+
+void AddDigits(Sudoku9x9 &sudoku, int I){
+    /* Function adds to sudoku a random digit from its solution.
+    So, at least in theory, it makes sudoku easier. */
+
+    if ( I <= 0 || I  > 30 ) return;
+
+    Sudoku9x9 S = Solve(sudoku);
+    if ( S.getStatus() != 1 ) return;
+    int i = 0, r, c;
+
+    while( i < I ){
+        r = rand()%9, c = rand()%9;
+        if( sudoku.GivenGrid[r][c] == 0 ){
+            sudoku.GivenGrid[r][c] = S.CurrentGrid[r][c];
+            sudoku.CurrentGrid[r][c] = S.CurrentGrid[r][c];
+            i++;
         }
     }
 }
