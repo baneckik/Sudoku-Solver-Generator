@@ -195,7 +195,7 @@ void Sudoku9x9::UpdatePossGrid(){
 
     // Only for Non-Consecutive sudoku
     if( getType() == 3 ){
-
+        // standard updating
         for(int r=0; r<9; r++){
             for(int c=0; c<9; c++){
                 if( CurrentGrid[r][c] != 0 ){
@@ -237,6 +237,418 @@ void Sudoku9x9::UpdatePossGrid(){
                         }
                     }
 
+                }
+            }
+        }
+
+        // Elimination technique nr 1:
+        for( int r=0; r<8; r++ ){
+            for( int c=0; c<9; c++ ){
+                if( CurrentGrid[r][c] == 0 ){
+                    for( int d=1; d<8; d++ ){
+                        // d - central digit (out of three)
+                        int sum = 0;
+                        for( int d1=0; d1<d-1; d1++ ){
+                            if( PossibilitiesGrid[r][c][d1] == true ){ sum++; break; }
+                        }
+                        for( int d1=d+2; d1<9; d1++ ){
+                            if( PossibilitiesGrid[r][c][d1] == true ) { sum++; break; }
+                        }
+                        if( sum == 0 ){
+                            if( r != 0 )
+                                PossibilitiesGrid[r-1][c][d] = false;
+                            if( r != 8 )
+                                PossibilitiesGrid[r+1][c][d] = false;
+                            if( c != 0 )
+                                PossibilitiesGrid[r][c-1][d] = false;
+                            if( c != 8 )
+                                PossibilitiesGrid[r][c+1][d] = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // Elimination technique nr 2:
+        for( int r=0; r<8; r++ ){
+            for( int c=0; c<9; c++ ){
+                if( CurrentGrid[r][c] == 0 ){
+                    for( int d=0; d<8; d++ ){
+                        // d - lower digit (out of two)
+                        int sum = 0;
+                        for( int d1=0; d1<d; d1++ ){
+                            if( PossibilitiesGrid[r][c][d1] == true ){ sum++; break; }
+                        }
+                        for( int d1=d+2; d1<9; d1++ ){
+                            if( PossibilitiesGrid[r][c][d1] == true ) { sum++; break; }
+                        }
+                        if( sum == 0 ){
+                            if( r != 0 ){
+                                PossibilitiesGrid[r-1][c][d] = false;
+                                PossibilitiesGrid[r-1][c][d+1] = false;
+                            }
+                            if( r != 8 ){
+                                PossibilitiesGrid[r+1][c][d] = false;
+                                PossibilitiesGrid[r+1][c][d+1] = false;
+                            }
+                            if( c != 0 ){
+                                PossibilitiesGrid[r][c-1][d] = false;
+                                PossibilitiesGrid[r][c-1][d+1] = false;
+                            }
+                            if( c != 8 ){
+                                PossibilitiesGrid[r][c+1][d] = false;
+                                PossibilitiesGrid[r][c+1][d+1] = false;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // Elimination technique nr 3:
+        for( int r=0; r<9; r++ ){
+            for( int d=0; d<9; d++){
+                for( int c=1; c<8; c++ ){
+                    // c - central column (out of three)
+                    if( CurrentGrid[r][c] == 0 ){
+                        int sum = 0;
+                        for( int c1=0; c1<c-1; c1++ ){
+                            if( PossibilitiesGrid[r][c1][d] == true ){ sum++; break; }
+                        }
+                        for( int c1=c+2; c1<9; c1++ ){
+                            if( PossibilitiesGrid[r][c1][d] == true ) { sum++; break; }
+                        }
+                        if( sum == 0 ){
+                            if( d != 0 )
+                                PossibilitiesGrid[r][c][d-1] = false;
+                            if( d != 8 )
+                                PossibilitiesGrid[r][c][d+1] = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        for( int c=0; c<9; c++ ){
+            for( int d=0; d<9; d++){
+                for( int r=1; r<8; r++ ){
+                    // r - central row (out of three)
+                    if( CurrentGrid[r][c] == 0 ){
+                        int sum = 0;
+                        for( int r1=0; r1<r-1; r1++ ){
+                            if( PossibilitiesGrid[r1][c][d] == true ){ sum++; break; }
+                        }
+                        for( int r1=r+2; r1<9; r1++ ){
+                            if( PossibilitiesGrid[r1][c][d] == true ) { sum++; break; }
+                        }
+                        if( sum == 0 ){
+                            if( d != 0 )
+                                PossibilitiesGrid[r][c][d-1] = false;
+                            if( d != 8 )
+                                PossibilitiesGrid[r][c][d+1] = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // Elimination technique nr 4:
+        for( int r=0; r<9; r++ ){
+            for( int d=0; d<9; d++){
+                for( int c=0; c<8; c++ ){
+                    // c - left column (out of two)
+                    if( CurrentGrid[r][c] == 0 ){
+                        int sum = 0;
+                        for( int c1=0; c1<c; c1++ ){
+                            if( PossibilitiesGrid[r][c1][d] == true ){ sum++; break; }
+                        }
+                        for( int c1=c+2; c1<9; c1++ ){
+                            if( PossibilitiesGrid[r][c1][d] == true ) { sum++; break; }
+                        }
+                        if( sum == 0 ){
+                            if( d != 0 ){
+                                PossibilitiesGrid[r][c][d-1] = false;
+                                PossibilitiesGrid[r][c+1][d-1] = false;
+                            }
+                            if( d != 8 ){
+                                PossibilitiesGrid[r][c][d+1] = false;
+                                PossibilitiesGrid[r][c+1][d+1] = false;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        for( int c=0; c<9; c++ ){
+            for( int d=0; d<9; d++){
+                for( int r=0; r<8; r++ ){
+                    // r - left row (out of two)
+                    if( CurrentGrid[r][c] == 0 ){
+                        int sum = 0;
+                        for( int r1=0; r1<r; r1++ ){
+                            if( PossibilitiesGrid[r1][c][d] == true ){ sum++; break; }
+                        }
+                        for( int r1=r+2; r1<9; r1++ ){
+                            if( PossibilitiesGrid[r1][c][d] == true ) { sum++; break; }
+                        }
+                        if( sum == 0 ){
+                            if( d != 0 ){
+                                PossibilitiesGrid[r][c][d-1] = false;
+                                PossibilitiesGrid[r+1][c][d-1] = false;
+                            }
+                            if( d != 8 ){
+                                PossibilitiesGrid[r][c][d+1] = false;
+                                PossibilitiesGrid[r+1][c][d+1] = false;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // Elimination technique nr 5
+        for( int boxr=0; boxr<3; boxr++ ){
+            for( int boxc=0; boxc<3; boxc++ ){
+                for( int d=0; d<9; d++ ){
+                    // center cross shape
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                    }
+                    // left T-shape
+                    if( PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3][d+1] = false;
+                    }
+                    // right T-shape
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] = false;
+                    }
+                    // upper T-shape
+                    if( PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3][boxc*3+1][d+1] = false;
+                    }
+                    // lower T-shape
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] = false;
+                    }
+                }
+            }
+        }
+        // Elimination technique nr 6 
+        for( int boxr=0; boxr<3; boxr++ ){
+            for( int boxc=0; boxc<3; boxc++ ){
+                for( int d=0; d<9; d++ ){
+                    // oxx
+                    // xox
+                    // xxx
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == true &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == true &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                    ){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3][boxc*3+1][d+1] = false;
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3][d+1] = false;
+                    }
+                    // xox
+                    // oxx
+                    // xxx
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == true &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == true &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                    ){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3][boxc*3][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3][boxc*3][d+1] = false;
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                    }
+                    // xox
+                    // xxo
+                    // xxx
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == true &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == true &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                    ){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3][boxc*3+2][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3][boxc*3+2][d+1] = false;
+                        if( d != 0)
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                    }
+                    // xxo
+                    // xox
+                    // xxx
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == true &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == true &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                    ){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3][boxc*3+1][d+1] = false;
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] = false;
+                    }
+                    // xxx
+                    // oxx
+                    // xox
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == true &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == true &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                    ){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3][d+1] = false;
+                    }
+                    // xxx
+                    // xox
+                    // oxx
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == true &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == true &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                    ){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3][d+1] = false;
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] = false;
+                    }
+                    // xxx
+                    // xox
+                    // xxo
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == true &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == true
+                    ){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] = false;
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] = false;
+                    }
+                    // xxx
+                    // xxo
+                    // xox
+                    if( PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == false &&
+                        PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == true &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == true &&
+                        PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                    ){
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                        if( d != 0 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3+2][d-1] = false;
+                        if( d != 8 )
+                            PossibilitiesGrid[boxr*3+2][boxc*3+2][d+1] = false;
+                    }
+                    
                 }
             }
         }
