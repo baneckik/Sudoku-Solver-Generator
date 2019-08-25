@@ -140,6 +140,51 @@ bool IsFilled(Sudoku9x9 sudoku) {
     return true;
 }
 
+void UpdatePossGrid_Classic(Sudoku9x9 &sudoku, bool &progress){
+    // actualization of PossibilitiesGrid
+    // for every digit in the CurrentGrid, program checks the possibilities it eliminates
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            if (sudoku.CurrentGrid[r][c] != 0) {
+                int D = sudoku.CurrentGrid[r][c];
+                // eliminating possibilities in the exact place
+                for (int d = 0; d < 9; d++) if (d != D-1) {
+                    if (sudoku.PossibilitiesGrid[r][c][d] == true) {
+                        progress = true;
+                        sudoku.PossibilitiesGrid[r][c][d] = false;
+                    }
+                }
+                // eliminating possibilities in the row
+                for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
+                    if (sudoku.PossibilitiesGrid[r][c2][D-1] == true) {
+                        progress = true;
+                        sudoku.PossibilitiesGrid[r][c2][D-1] = false;
+                    }
+                }
+                // eliminating possibilities in the column
+                for (int r2 = 0; r2 < 9; r2++) if (r2 != r) {
+                    if (sudoku.PossibilitiesGrid[r2][c][D-1] == true) {
+                        progress = true;
+                        sudoku.PossibilitiesGrid[r2][c][D-1] = false;
+                    }
+                }
+                // eliminating possibilities in the box
+                int boxr = r/3, boxc = c/3;
+                for (int r2 = 0; r2 < 3; r2++)
+                    for (int c2 = 0; c2 < 3; c2++)
+                        if ( boxr*3 + r2 != r || boxc*3 + c2 != c ) {
+                            if (sudoku.PossibilitiesGrid[boxr*3 + r2][boxc*3 + c2][D-1] == true) {
+                                    progress = true;
+                                    sudoku.PossibilitiesGrid[boxr*3 + r2][boxc*3 + c2][D-1] = false;
+                            }
+                        }
+
+
+            }
+        }
+    }
+}
+
 void UpdatePossGrid_Diag(Sudoku9x9 &sudoku, bool &progress){
     /* Function updates the PossGrid of given sudoku using Diagonal sudoku rules only.
     It is only a suplementation for UpdatePossGrid method.
@@ -419,6 +464,76 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
     }
 }
 
+void UpdateCurrentGrid(Sudoku9x9 &sudoku, bool &progress){
+    // actualization of the CurrentGrid
+    // for every digit checking if there is only one possibilitie
+    // in a certain place, row, column or box
+    for (int d = 0; d < 9; d++) {
+        // checking if there is only one possibilitie in a place
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                if( sudoku.CurrentGrid[r][c] == 0 && sudoku.N_Possibilities(r,c) == 1 ){
+                    for (int d = 0; d < 9; d++){
+                        if( sudoku.PossibilitiesGrid[r][c][d] == true ){
+                            progress = true;
+                            sudoku.CurrentGrid[r][c] = d+1;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // checking if there is only one possibilitie in a row
+        for (int r = 0; r < 9; r++) {
+            if( sudoku.N_Possibilities(d,r,0) == 1 ){
+                for (int c = 0; c < 9; c++){
+                    if( sudoku.PossibilitiesGrid[r][c][d] == true ){
+                        if( sudoku.CurrentGrid[r][c] == 0 ){
+                            progress = true;
+                            sudoku.CurrentGrid[r][c] = d+1;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        // checking if there is only one possibilitie in a column
+        for (int c = 0; c < 9; c++) {
+            if( sudoku.N_Possibilities(d,c,1) == 1 ){
+                for (int r = 0; r < 9; r++){
+                    if( sudoku.PossibilitiesGrid[r][c][d] == true ){
+                        if( sudoku.CurrentGrid[r][c] == 0 ){
+                            progress = true;
+                            sudoku.CurrentGrid[r][c] = d+1;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        // checking if there is only one possibilitie in a box
+        for(int boxr=0; boxr<3; boxr++){
+            for(int boxc=0; boxc<3; boxc++){
+                int sum = 0;
+                for(int r=0; r<3; r++)
+                    for(int c=0; c<3; c++)
+                        sum += sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d];
+                if( sum == 1 ){
+                    for(int r=0; r<3; r++)
+                        for(int c=0; c<3; c++)
+                            if( sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d] == true ){
+                                if( sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] == 0 ){
+                                    progress = true;
+                                    sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] = d+1;
+                                }
+                                break;
+                            }
+                }
+            }
+        }
+    }
+}
+
 Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
     /* Function tries to solve sudoku using only hidden singles
     and rows/cols/boxes where certain digit can fit into only one place. */
@@ -439,47 +554,7 @@ Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
         progress = false;
 
         // actualization of PossibilitiesGrid
-        // for every digit in the CurrentGrid, program checks the possibilities it eliminates
-        for (int r = 0; r < 9; r++) {
-            for (int c = 0; c < 9; c++) {
-                if (sudoku.CurrentGrid[r][c] != 0) {
-                    int D = sudoku.CurrentGrid[r][c];
-                    // eliminating possibilities in the exact place
-                    for (int d = 0; d < 9; d++) if (d != D-1) {
-                        if (sudoku.PossibilitiesGrid[r][c][d] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[r][c][d] = false;
-                        }
-                    }
-                    // eliminating possibilities in the row
-                    for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
-                        if (sudoku.PossibilitiesGrid[r][c2][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[r][c2][D-1] = false;
-                        }
-                    }
-                    // eliminating possibilities in the column
-                    for (int r2 = 0; r2 < 9; r2++) if (r2 != r) {
-                        if (sudoku.PossibilitiesGrid[r2][c][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[r2][c][D-1] = false;
-                        }
-                    }
-                    // eliminating possibilities in the box
-                    int boxr = r/3, boxc = c/3;
-                    for (int r2 = 0; r2 < 3; r2++)
-                        for (int c2 = 0; c2 < 3; c2++)
-                            if ( boxr*3 + r2 != r || boxc*3 + c2 != c ) {
-                                if (sudoku.PossibilitiesGrid[boxr*3 + r2][boxc*3 + c2][D-1] == true) {
-                                     progress = true;
-                                     sudoku.PossibilitiesGrid[boxr*3 + r2][boxc*3 + c2][D-1] = false;
-                                }
-                            }
-
-
-                }
-            }
-        }
+        UpdatePossGrid_Classic(sudoku, progress);
 
         // only for Diagonal sudoku
         if( sudoku.getType() == 2 ){
@@ -491,74 +566,9 @@ Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
             UpdatePossGrid_NonCon(sudoku,progress);
         }
 
-
-        // actualization of the CurrentGrid
-        // for every digit checking if there is only one possibilitie
-        // in a certain place, row, column or box
-        for (int d = 0; d < 9; d++) {
-            // checking if there is only one possibilitie in a place
-            for (int r = 0; r < 9; r++) {
-                for (int c = 0; c < 9; c++) {
-                    if( sudoku.CurrentGrid[r][c] == 0 && sudoku.N_Possibilities(r,c) == 1 ){
-                        for (int d = 0; d < 9; d++){
-                            if( sudoku.PossibilitiesGrid[r][c][d] == true ){
-                                progress = true;
-                                sudoku.CurrentGrid[r][c] = d+1;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            // checking if there is only one possibilitie in a row
-            for (int r = 0; r < 9; r++) {
-                if( sudoku.N_Possibilities(d,r,0) == 1 ){
-                    for (int c = 0; c < 9; c++){
-                        if( sudoku.PossibilitiesGrid[r][c][d] == true ){
-                            if( sudoku.CurrentGrid[r][c] == 0 ){
-                                progress = true;
-                                sudoku.CurrentGrid[r][c] = d+1;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            // checking if there is only one possibilitie in a column
-            for (int c = 0; c < 9; c++) {
-                if( sudoku.N_Possibilities(d,c,1) == 1 ){
-                    for (int r = 0; r < 9; r++){
-                        if( sudoku.PossibilitiesGrid[r][c][d] == true ){
-                            if( sudoku.CurrentGrid[r][c] == 0 ){
-                                progress = true;
-                                sudoku.CurrentGrid[r][c] = d+1;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            // checking if there is only one possibilitie in a box
-            for(int boxr=0; boxr<3; boxr++){
-                for(int boxc=0; boxc<3; boxc++){
-                    int sum = 0;
-                    for(int r=0; r<3; r++)
-                        for(int c=0; c<3; c++)
-                            sum += sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d];
-                    if( sum == 1 ){
-                        for(int r=0; r<3; r++)
-                            for(int c=0; c<3; c++)
-                                if( sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d] == true ){
-                                    if( sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] == 0 ){
-                                        progress = true;
-                                        sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] = d+1;
-                                    }
-                                    break;
-                                }
-                    }
-                }
-            }
-        }
+        // actualization of CurrentGrid
+        UpdateCurrentGrid(sudoku, progress);
+        
     }
 
     return sudoku;
@@ -584,47 +594,7 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
         progress = false;
 
         // actualization of PossibilitiesGrid
-        // for every digit in the CurrentGrid, program checks the possibilities it eliminates
-        for (int r = 0; r < 9; r++) {
-            for (int c = 0; c < 9; c++) {
-                if (sudoku.CurrentGrid[r][c] != 0) {
-                    int D = sudoku.CurrentGrid[r][c];
-                    // eliminating possibilities in the exact place
-                    for (int d = 0; d < 9; d++) if (d != D-1) {
-                        if (sudoku.PossibilitiesGrid[r][c][d] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[r][c][d] = false;
-                        }
-                    }
-                    // eliminating possibilities in the row
-                    for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
-                        if (sudoku.PossibilitiesGrid[r][c2][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[r][c2][D-1] = false;
-                        }
-                    }
-                    // eliminating possibilities in the column
-                    for (int r2 = 0; r2 < 9; r2++) if (r2 != r) {
-                        if (sudoku.PossibilitiesGrid[r2][c][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[r2][c][D-1] = false;
-                        }
-                    }
-                    // eliminating possibilities in the box
-                    int boxr = r/3, boxc = c/3;
-                    for (int r2 = 0; r2 < 3; r2++)
-                        for (int c2 = 0; c2 < 3; c2++)
-                            if ( boxr*3 + r2 != r || boxc*3 + c2 != c ) {
-                                if (sudoku.PossibilitiesGrid[boxr*3 + r2][boxc*3 + c2][D-1] == true) {
-                                     progress = true;
-                                     sudoku.PossibilitiesGrid[boxr*3 + r2][boxc*3 + c2][D-1] = false;
-                                }
-                            }
-
-
-                }
-            }
-        }
+        UpdatePossGrid_Classic(sudoku, progress);
 
         // only for Diagonal sudoku
         if( sudoku.getType() == 2 ){
@@ -636,7 +606,9 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
             UpdatePossGrid_NonCon(sudoku,progress);
         }
 
-        // trick 1
+        // Basic elimination technique nr 1
+        // When in certain box digit can fit only into cells in one row/col, then the possibilities
+        // from the rest of this row/col for this digit can be eliminated. 
 
         // horizontally
         for (int d = 0; d < 9; d++) for (int boxr = 0; boxr < 3; boxr++) {
@@ -804,72 +776,7 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
         }
 
         // actualization of the CurrentGrid
-        // for every digit checking if there is only one possibilitie
-        // in a certain place, row, column or box
-        for (int d = 0; d < 9; d++) {
-            // checking if there is only one possibilitie in a place
-            for (int r = 0; r < 9; r++) {
-                for (int c = 0; c < 9; c++) {
-                    if( sudoku.CurrentGrid[r][c] == 0 && sudoku.N_Possibilities(r,c) == 1 ){
-                        for (int d = 0; d < 9; d++){
-                            if( sudoku.PossibilitiesGrid[r][c][d] == true ){
-                                progress = true;
-                                sudoku.CurrentGrid[r][c] = d+1;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            // checking if there is only one possibilitie in a row
-            for (int r = 0; r < 9; r++) {
-                if( sudoku.N_Possibilities(d,r,0) == 1 ){
-                    for (int c = 0; c < 9; c++){
-                        if( sudoku.PossibilitiesGrid[r][c][d] == true ){
-                            if( sudoku.CurrentGrid[r][c] == 0 ){
-                                progress = true;
-                                sudoku.CurrentGrid[r][c] = d+1;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            // checking if there is only one possibilitie in a column
-            for (int c = 0; c < 9; c++) {
-                if( sudoku.N_Possibilities(d,c,1) == 1 ){
-                    for (int r = 0; r < 9; r++){
-                        if( sudoku.PossibilitiesGrid[r][c][d] == true ){
-                            if( sudoku.CurrentGrid[r][c] == 0 ){
-                                progress = true;
-                                sudoku.CurrentGrid[r][c] = d+1;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            // checking if there is only one possibilitie in a box
-            for(int boxr=0; boxr<3; boxr++){
-                for(int boxc=0; boxc<3; boxc++){
-                    int sum = 0;
-                    for(int r=0; r<3; r++)
-                        for(int c=0; c<3; c++)
-                            sum += sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d];
-                    if( sum == 1 ){
-                        for(int r=0; r<3; r++)
-                            for(int c=0; c<3; c++)
-                                if( sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d] == true ){
-                                    if( sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] == 0 ){
-                                        progress = true;
-                                        sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] = d+1;
-                                    }
-                                    break;
-                                }
-                    }
-                }
-            }
-        }
+        UpdateCurrentGrid(sudoku, progress);
     }
 
 
