@@ -654,6 +654,33 @@ void Sudoku9x9::UpdatePossGrid(){
         }
     }
 
+    // Only for Anti-Knigh sudoku
+    if( getType() == 4 ){
+        for( int r=0; r<9; r++ ){
+            for( int c=0; c<9; c++ ){
+                if( CurrentGrid[r][c] != 0 ){
+                    int d = CurrentGrid[r][c]-1;
+                    if( r>0 && c>1 )
+                        PossibilitiesGrid[r-1][c-2][d] = false;
+                    if( r>1 && c>0 )
+                        PossibilitiesGrid[r-2][c-1][d] = false;
+                    if( r>1 && c<8 )
+                        PossibilitiesGrid[r-2][c+1][d] = false;
+                    if( r>0 && c<7 )
+                        PossibilitiesGrid[r-1][c+2][d] = false;
+                    if( r<8 && c<7 )
+                        PossibilitiesGrid[r+1][c+2][d] = false;
+                    if( r<7 && c<8 )
+                        PossibilitiesGrid[r+2][c+1][d] = false;
+                    if( r<7 && c>0 )
+                        PossibilitiesGrid[r+2][c-1][d] = false;
+                    if( r<8 && c>1 )
+                        PossibilitiesGrid[r+1][c-2][d] = false;
+                }
+            }
+        }
+    }
+
     // trick 1
 
     // horizontally

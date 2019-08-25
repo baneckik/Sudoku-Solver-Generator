@@ -861,6 +861,51 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
     }
 }
 
+void UpdatePossGrid_AntiKnight(Sudoku9x9 &sudoku, bool &progress){
+    /* Function updates the PossGrid of given sudoku using Anti-Knight sudoku rules only.
+    It is only a suplementation for UpdatePossGrid method.
+    It does not updates PossGrid using standard classic sudoku rules! */
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<9; c++ ){
+            if( sudoku.CurrentGrid[r][c] != 0 ){
+                int d = sudoku.CurrentGrid[r][c]-1;
+                if( r>0 && c>1 && sudoku.PossibilitiesGrid[r-1][c-2][d] == true ){
+                    sudoku.PossibilitiesGrid[r-1][c-2][d] = false;
+                    progress = true;
+                }
+                if( r>1 && c>0 && sudoku.PossibilitiesGrid[r-2][c-1][d] == true ){
+                    sudoku.PossibilitiesGrid[r-2][c-1][d] = false;
+                    progress = true;
+                }
+                if( r>1 && c<8 && sudoku.PossibilitiesGrid[r-2][c+1][d] == true ){
+                    sudoku.PossibilitiesGrid[r-2][c+1][d] = false;
+                    progress = true;
+                }
+                if( r>0 && c<7 && sudoku.PossibilitiesGrid[r-1][c+2][d] == true ){
+                    sudoku.PossibilitiesGrid[r-1][c+2][d] = false;
+                    progress = true;
+                }
+                if( r<8 && c<7 && sudoku.PossibilitiesGrid[r+1][c+2][d] == true ){
+                    sudoku.PossibilitiesGrid[r+1][c+2][d] = false;
+                    progress = true;
+                }
+                if( r<7 && c<8 && sudoku.PossibilitiesGrid[r+2][c+1][d] == true ){
+                    sudoku.PossibilitiesGrid[r+2][c+1][d] = false;
+                    progress = true;
+                }
+                if( r<7 && c>0 && sudoku.PossibilitiesGrid[r+2][c-1][d] == true ){
+                    sudoku.PossibilitiesGrid[r+2][c-1][d] = false;
+                    progress = true;
+                }
+                if( r<8 && c>1 && sudoku.PossibilitiesGrid[r+1][c-2][d] == true ){
+                    sudoku.PossibilitiesGrid[r+1][c-2][d] = false;
+                    progress = true;
+                }
+            }
+        }
+    }
+}
+
 void UpdateCurrentGrid(Sudoku9x9 &sudoku, bool &progress){
     // actualization of the CurrentGrid
     // for every digit checking if there is only one possibilitie
@@ -963,6 +1008,11 @@ Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
             UpdatePossGrid_NonCon(sudoku,progress);
         }
 
+        // Only for Anti-Knight sudoku
+        if( sudoku.getType() == 4 ){
+            UpdatePossGrid_AntiKnight(sudoku,progress);
+        }
+
         // actualization of CurrentGrid
         UpdateCurrentGrid(sudoku, progress);
         
@@ -1003,6 +1053,11 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
             UpdatePossGrid_NonCon(sudoku,progress);
         }
 
+        // Only for Anti-Knight sudoku
+        if( sudoku.getType() == 4 ){
+            UpdatePossGrid_AntiKnight(sudoku,progress);
+        }
+        
         // Basic elimination technique nr 1
         // When in certain box digit can fit only into cells in one row/col, then the possibilities
         // from the rest of this row/col for this digit can be eliminated. 
