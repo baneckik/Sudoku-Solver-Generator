@@ -7,6 +7,17 @@
 #include "solvegeneratefunctions.h"
 #include <QPrinter>
 #include <QPrintDialog>
+#include <QtGui>
+#include <QtCore>
+#include <QComboBox>
+
+void CreateTypeCombo(QComboBox *sudokuType){
+    sudokuType->addItem("-None-");
+    sudokuType->addItem("Classic");
+    sudokuType->addItem("Diagonal");
+    sudokuType->addItem("Non-Consecutive");
+    sudokuType->addItem("Anti-Knight");
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -78,6 +89,41 @@ MainWindow::MainWindow(QWidget *parent) :
             DiffOptionsGroup->addButton(diff4);
         mainlayout->addItem(DifficultyOptions);
 
+        QLabel *ChooseLabel = new QLabel("Choose Sudoku type:");
+        QComboBox *sudoku1Type = new QComboBox;
+        QComboBox *sudoku2Type = new QComboBox;
+        QComboBox *sudoku3Type = new QComboBox;
+        QComboBox *sudoku4Type = new QComboBox;
+        QComboBox *sudoku5Type = new QComboBox;
+        QComboBox *sudoku6Type = new QComboBox;
+        QGridLayout *SudokuChoose = new QGridLayout;
+            SudokuChoose->addWidget(ChooseLabel,0,0,1,1);
+            CreateTypeCombo(sudoku1Type);
+            SudokuChoose->addWidget(sudoku1Type,1,0,1,1);
+
+            SudokuChoose->addWidget(ChooseLabel,0,1,1,1);
+            CreateTypeCombo(sudoku2Type);
+            SudokuChoose->addWidget(sudoku2Type,1,1,1,1);
+
+            SudokuChoose->addWidget(ChooseLabel,2,0,1,1);
+            CreateTypeCombo(sudoku3Type);
+            SudokuChoose->addWidget(sudoku3Type,3,0,1,1);
+
+            SudokuChoose->addWidget(ChooseLabel,2,1,1,1);
+            CreateTypeCombo(sudoku4Type);
+            SudokuChoose->addWidget(sudoku4Type,3,1,1,1);
+
+            SudokuChoose->addWidget(ChooseLabel,4,0,1,1);
+            CreateTypeCombo(sudoku5Type);
+            SudokuChoose->addWidget(sudoku5Type,5,0,1,1);
+
+            SudokuChoose->addWidget(ChooseLabel,4,1,1,1);
+            CreateTypeCombo(sudoku6Type);
+            SudokuChoose->addWidget(sudoku6Type,5,1,1,1);
+
+
+        mainlayout->addItem(SudokuChoose);
+
         QLabel *Outro = new QLabel("All right then, let's go!");
         mainlayout->addWidget(Outro);
 
@@ -85,11 +131,11 @@ MainWindow::MainWindow(QWidget *parent) :
         mainlayout->addWidget(GO);
 
     QWidget *IntroWindow = new QWidget();
+    IntroWindow->setWindowTitle("Intro Window");
     IntroWindow->setLayout(mainlayout);
     IntroWindow->show();
 
     connect(SudokuTypesInfoButton, SIGNAL(clicked()), this, SLOT(openTypesInfoWindow()));
-
 
     ui->setupUi(this);
 }
@@ -131,9 +177,9 @@ void AddSudokuToPainter(QPainter &painter, int size, int X, int Y, Sudoku9x9 sud
     int startX = X, startY = Y; // top left corner coordinates of sudoku
     int type = sudoku.getType(), seed = sudoku.getSeed();
 
-    QPen MainBoxPen(Qt::black, 20, Qt::SolidLine);
+    QPen MainBoxPen(Qt::black, max(2,size/22), Qt::SolidLine);
     QPen SmallBoxPen(Qt::black, 1, Qt::SolidLine);
-    QPen DiagonalPen(Qt::lightGray, 30, Qt::DashLine);
+    QPen DiagonalPen(Qt::lightGray, max(3,size/33), Qt::DashLine);
 
     // Diagonals
     if ( sudoku.getType()==2 ){
@@ -225,27 +271,26 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
     const QString fileName("/home/baneckik/Documents/Inne/C/YourSudoku.pdf");
     QPdfWriter pdfWriter(fileName);
     pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+    QPainter painter(&pdfWriter);
+    this->setBaseSize(10000,15000);
+    QPainter painter2(this);
+
+    scene = new QGraphicsScene(this);
 
 
     srand( time(NULL) );
     //int seed = 1751815565; // generating seed
     int seed = rand(); // generating seed
-    QPainter painter(&pdfWriter);
+
     int size = 450; // single cell size
     int X = 300, Y = 250, startX, startY; // top left corner coordinates of sudoku
 
-    QPen MainBoxPen(Qt::black, 20, Qt::SolidLine);
-    QPen SmallBoxPen(Qt::black, 1, Qt::SolidLine);
-    QPen DiagonalPen(Qt::lightGray, 30, Qt::DashLine);
-
     QFont footerFont = painter.font();
+    footerFont.setPointSize(3*footerFont.pointSize()/4);
 
-    //int seeds[6] = {28,45,46,50,53,60};
-    int seeds[6] = {0,1,3,7,13,14};
-    //int seeds[6] = {15,17,20,23,35,40};
+    //int seeds[6] = {0,1,3,7,13,14};
 
     for(int iter=0; iter<6; iter++ ){
-
         Sudoku9x9 sudoku = Generate(seed + iter ,1);
         //sudoku.PermuteRowsCols(seed+iter);
         //sudoku.PermuteDigits(seed+iter);
@@ -253,18 +298,16 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
         //AddDigits(sudoku,8);
         //sudoku = Solve(sudoku);
 
-
         startX = X + (iter%2)*11*size;
         startY = Y + (iter/2)*10*size;
-
         AddSudokuToPainter(painter, size-iter*50, startX, startY, sudoku);
-
+        startX = X/10 + (iter%2)*11*size;
+        startY = Y/10 + (iter/2)*10*size;
+        AddSudokuToPainter(painter2, size/50, startX, startY, sudoku);
     }
 
-    footerFont.setPointSize(3*footerFont.pointSize()/4);
     painter.setFont(footerFont);
     painter.drawText(7000,13700,"Krzysztof Banecki, all rights reserved" + QString(0x00A9));
-
 }
 
 MainWindow::~MainWindow()
