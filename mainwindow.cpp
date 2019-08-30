@@ -127,6 +127,99 @@ void MainWindow::openGenerateSudokuWindow(){
 
 }
 
+void AddSudokuToPainter(QPainter &painter, int size, int X, int Y, Sudoku9x9 sudoku){
+    int startX = X, startY = Y; // top left corner coordinates of sudoku
+    int type = sudoku.getType(), seed = sudoku.getSeed();
+
+    QPen MainBoxPen(Qt::black, 20, Qt::SolidLine);
+    QPen SmallBoxPen(Qt::black, 1, Qt::SolidLine);
+    QPen DiagonalPen(Qt::lightGray, 30, Qt::DashLine);
+
+    // Diagonals
+    if ( sudoku.getType()==2 ){
+        painter.setPen(DiagonalPen);
+        painter.drawLine(startX,startY,startX+9*size,startY+9*size);
+        painter.drawLine(startX,startY+9*size,startX+9*size,startY);
+    }
+
+    // Thick lines
+    painter.setPen(MainBoxPen);
+    painter.drawRect(startX,startY,9*size,9*size);
+    if( type == 1 || type == 2 || type == 3 || type == 4 ){
+        painter.drawRect(startX+3*size,startY,3*size,9*size);
+        painter.drawRect(startX,startY+3*size,9*size,3*size);
+    }
+
+    // Narrow lines
+    painter.setPen(SmallBoxPen);
+    painter.drawRect(startX+size,startY,size,9*size);
+    painter.drawRect(startX+4*size,startY,size,9*size);
+    painter.drawRect(startX+7*size,startY,size,9*size);
+    painter.drawRect(startX,startY+size,9*size,size);
+    painter.drawRect(startX,startY+4*size,9*size,size);
+    painter.drawRect(startX,startY+7*size,9*size,size);
+
+    // Stars
+    for (int i=0;i<sudoku.getDifficulty();i++){
+        QPolygon star;
+        star << QPoint(startX, startY) << QPoint(startX + 118, startY - 363)
+             << QPoint(startX - 191, startY - 588) << QPoint(startX + 191, startY - 588)
+             << QPoint(startX + 309, startY - 951)
+             << QPoint(startX + 427, startY - 588) << QPoint(startX + 809, startY - 588)
+             << QPoint(startX + 500, startY - 363) << QPoint(startX + 618, startY)
+             << QPoint(startX + 309, startY - 225);
+        double scaleFactor = (double)size/450/4;
+        QTransform trans;
+        trans.translate(-(scaleFactor-1)*startX + i*scaleFactor*1100,-(scaleFactor-1)*startY -scaleFactor*100);
+        trans=trans.scale(scaleFactor,scaleFactor);
+        QPolygon star2=trans.map(star);
+
+        painter.drawPolygon(star2);
+    }
+
+    // Text
+
+    QString s("Type: Unknown");
+    if( type==1 )
+        s="Type: Classic";
+    else if( type==2 )
+        s="Type: Diagonal";
+    else if( type==3 )
+        s="Type: Non-Con";
+    else if( type==4 )
+        s="Type: Anti-Knight";
+
+    painter.setFont(QFont(painter.font().defaultFamily(),size/45));
+
+    painter.drawText(startX+size*6,startY-size/4,s);
+    painter.drawText(startX+size*3,startY+size*9+size/3,"seed=" + QString::number(seed));
+
+    QFont digitFont = painter.font();
+    digitFont.setPointSize(digitFont.pointSize()*2);
+    painter.setFont(digitFont);
+    QString * digit = new QString;
+
+    for( int r=0;r<9;r++){
+        for( int c=0;c<9;c++ ){
+            if( sudoku.CurrentGrid[r][c] != 0 ){
+                digit->setNum(sudoku.CurrentGrid[r][c]);
+                if ( sudoku.CurrentGrid[r][c] == sudoku.GivenGrid[r][c] ){
+                    painter.setOpacity(1);
+                }else {
+                    painter.setOpacity(0.4);
+                }
+                painter.drawText(startX+size*r+size*30/100,startY+size*c+78*size/100,*digit);
+            }
+        }
+    }
+    painter.setOpacity(1);
+
+    digitFont.setPointSize(digitFont.pointSize()/2);
+    painter.setFont(digitFont);
+
+}
+
+
 void GenerateWindow::paintEvent(QPaintEvent *event)
 {
     const QString fileName("/home/baneckik/Documents/Inne/C/YourSudoku.pdf");
@@ -145,93 +238,29 @@ void GenerateWindow::paintEvent(QPaintEvent *event)
     QPen SmallBoxPen(Qt::black, 1, Qt::SolidLine);
     QPen DiagonalPen(Qt::lightGray, 30, Qt::DashLine);
 
+    QFont footerFont = painter.font();
+
+    //int seeds[6] = {28,45,46,50,53,60};
+    int seeds[6] = {0,1,3,7,13,14};
+    //int seeds[6] = {15,17,20,23,35,40};
 
     for(int iter=0; iter<6; iter++ ){
 
-        Sudoku9x9 sudoku = Generate(seed+iter,iter%2+1);
-        RestrictDigits(sudoku);
+        Sudoku9x9 sudoku = Generate(seed + iter ,1);
+        //sudoku.PermuteRowsCols(seed+iter);
+        //sudoku.PermuteDigits(seed+iter);
+        //RestrictDigits(sudoku);
+        //AddDigits(sudoku,8);
+        //sudoku = Solve(sudoku);
+
 
         startX = X + (iter%2)*11*size;
         startY = Y + (iter/2)*10*size;
 
-        if ( sudoku.getType()==2 ){
-            painter.setPen(DiagonalPen);
-            painter.drawLine(startX,startY,startX+9*size,startY+9*size);
-            painter.drawLine(startX,startY+9*size,startX+9*size,startY);
-        }
-
-        painter.setPen(MainBoxPen);
-        painter.drawRect(startX,startY,9*size,9*size);
-        painter.drawRect(startX+3*size,startY,3*size,9*size);
-        painter.drawRect(startX,startY+3*size,9*size,3*size);
-
-        painter.setPen(SmallBoxPen);
-        painter.drawRect(startX+size,startY,size,9*size);
-        painter.drawRect(startX+4*size,startY,size,9*size);
-        painter.drawRect(startX+7*size,startY,size,9*size);
-        painter.drawRect(startX,startY+size,9*size,size);
-        painter.drawRect(startX,startY+4*size,9*size,size);
-        painter.drawRect(startX,startY+7*size,9*size,size);
-
-        QString s("Type: Unknown");
-        if( sudoku.getType()==1 )
-            s="Type: Classic";
-        else if( sudoku.getType()==2 )
-            s="Type: Diagonal";
-        else if( sudoku.getType()==3 )
-            s="Type: Non-Con";
-        else if( sudoku.getType()==4 )
-            s="Type: Anti-Knight";
-
-        painter.drawText(startX+size*6,startY-110,s);
-        painter.drawText(startX+size*3,startY+size*9+150,"seed=" + QString::number(sudoku.getSeed()));
-
-        for (int i=0;i<sudoku.getDifficulty();i++){
-            QPolygon star;
-            star << QPoint(startX, startY) << QPoint(startX + 118, startY - 363)
-                 << QPoint(startX - 191, startY - 588) << QPoint(startX + 191, startY - 588)
-                 << QPoint(startX + 309, startY - 951)
-                 << QPoint(startX + 427, startY - 588) << QPoint(startX + 809, startY - 588)
-                 << QPoint(startX + 500, startY - 363) << QPoint(startX + 618, startY)
-                 << QPoint(startX + 309, startY - 225);
-            double scaleFactor = 0.25;
-            QTransform trans;
-            trans.translate(-(scaleFactor-1)*startX + i*scaleFactor*1100,-(scaleFactor-1)*startY -scaleFactor*100);
-            trans=trans.scale(scaleFactor,scaleFactor);
-            QPolygon star2=trans.map(star);
-
-            painter.drawPolygon(star2);
-        }
-
-        //sudoku = Solve(sudoku);
-
-        QFont digitFont = painter.font();
-        digitFont.setPointSize(digitFont.pointSize()*2);
-        painter.setFont(digitFont);
-        QString * digit = new QString;
-
-        for( int r=0;r<9;r++){
-            for( int c=0;c<9;c++ ){
-                if( sudoku.CurrentGrid[r][c] != 0 ){
-                    digit->setNum(sudoku.CurrentGrid[r][c]);
-                    if ( sudoku.CurrentGrid[r][c] == sudoku.GivenGrid[r][c] ){
-                        painter.setOpacity(1);
-                    }else {
-                        painter.setOpacity(0.4);
-                    }
-                    painter.drawText(startX+size*r+size*30/100,startY+size*c+78*size/100,*digit);
-                }
-            }
-        }
-        painter.setOpacity(1);
-
-
-        digitFont.setPointSize(digitFont.pointSize()/2);
-        painter.setFont(digitFont);
+        AddSudokuToPainter(painter, size-iter*50, startX, startY, sudoku);
 
     }
 
-    QFont footerFont = painter.font();
     footerFont.setPointSize(3*footerFont.pointSize()/4);
     painter.setFont(footerFont);
     painter.drawText(7000,13700,"Krzysztof Banecki, all rights reserved" + QString(0x00A9));
