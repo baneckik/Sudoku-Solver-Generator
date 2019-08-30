@@ -9,10 +9,14 @@ class Region{
         int GridHight;
         
     public:
-        Region(int wid, int hig , bool *grid);
-        Region(int wid, int hig);
         bool *Grid;
 
+        Region(int wid, int hig , bool *grid);
+        Region(int wid, int hig);
+        
+        int getWidth(){ return GridWidth; }
+        int getHight(){ return GridHight; }
+        
         int RegionSize();
         bool IsConsistent();
         void PrintToConsole();
@@ -38,6 +42,9 @@ int Region::RegionSize(){
 };
 
 void SearchRegion(int r, int c, bool *helpgrid, bool *grid, int wid, int hig ){
+    /* Help function for IsConsistent(). 
+    Function modifies helpgrid to find current consistency component. */
+
     if( r<0 || c<0 || r>=hig || c>= wid ) return;
     if( grid[wid*r+c] == false ) return;
     if( helpgrid[wid*r+c] == true ) return;
@@ -77,4 +84,40 @@ void Region::PrintToConsole(){
         else std::cout<<"0";
     }
     std::cout<<"\n";
+}
+
+bool AreOverlapping(Region r1, Region r2, int wid, int hig){
+    for( int i=0; i<wid*hig; i++ )
+        if( r1.Grid[i] && r2.Grid[i] ) return true;
+    return false;
+}
+
+bool AreAdjacentBySide(Region r1, Region r2, int wid, int hig){
+    if( AreOverlapping(r1,r2,wid,hig) ) return true;
+     
+    int w = r1.getWidth(), h = r1.getHight();
+    for( int i=0; i<w*h; i++ ){
+        if( i%w != w-1 ){
+            if( (r1.Grid[i] && r2.Grid[i+1]) || (r2.Grid[i] && r1.Grid[i+1]) ) return true;
+        }
+        if( i/w != h-1 ){
+            if( (r1.Grid[i] && r2.Grid[i+w]) || (r2.Grid[i] && r1.Grid[i+w]) ) return true;
+        }
+    }
+    return false;
+}
+
+bool AreAdjacentByCorner(Region r1, Region r2, int wid, int hig){
+    if( AreAdjacentBySide(r1,r2,wid,hig) ) return true;
+    
+    int w = r1.getWidth(), h = r1.getHight();
+    for( int i=0; i<w*h; i++ ){
+        if( i%w != w-1 && i/w != h-1 ){
+            if( (r1.Grid[i] && r2.Grid[i+w+1]) || (r2.Grid[i] && r1.Grid[i+w+1]) ) return true;
+        }
+        if( i%w != 0 && i/w != h-1 ){
+            if( (r1.Grid[i] && r2.Grid[i+w-1]) || (r2.Grid[i] && r1.Grid[i+w-1]) ) return true;
+        }
+    }
+    return false;
 }
