@@ -1,6 +1,6 @@
 #include <iostream>
 #include <algorithm>
-
+#include <stdlib.h>
 #ifndef SUDOKU9x9
 #define SUDOKU9x9
 
@@ -35,11 +35,28 @@ class Sudoku9x9{
 
         void UpdatePossGrid();
         bool InsertRandomDigit();
+        void PermuteDigits(int seed);
+        void PermuteRowsCols(int seed);
 
         void PrintToConsole();
 };
 
 #endif
+
+void shuffle(int *array, size_t n){
+    if (n > 1) 
+    {
+        size_t i;
+        for (i = 0; i < n - 1; i++) 
+        {
+          size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+          int t = array[j];
+          array[j] = array[i];
+          array[i] = t;
+        }
+    }
+}
+
 
 Sudoku9x9::Sudoku9x9(int Given[9][9], int type) : Type(type) {
     for (int i = 0; i < 9; i++)
@@ -50,7 +67,7 @@ Sudoku9x9::Sudoku9x9(int Given[9][9], int type) : Type(type) {
     for (int i = 0; i < 9; i++)
         for (int j = 0; j < 9; j++)
             for (int k = 0; k < 9; k++)
-                PossibilitiesGrid[i][j][k] = 1;
+                PossibilitiesGrid[i][j][k] = true;
     Status = 0;
     Difficulty = 0;
     Seed = 0;
@@ -802,4 +819,73 @@ bool Sudoku9x9::InsertRandomDigit(){
         }
     }
     return true;
+}
+
+void Sudoku9x9::PermuteDigits(int seed){
+
+    if( getType() == 3 ) return;
+
+    int digits[] = {1,2,3,4,5,6,7,8,9};
+    srand(seed);
+    std::random_shuffle(digits,digits+9);
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<9; c++ ){
+            if( GivenGrid[r][c] != 0 ){
+                GivenGrid[r][c] = digits[GivenGrid[r][c]-1];
+                CurrentGrid[r][c] = digits[CurrentGrid[r][c]-1];
+            }
+        }
+    }
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<9; c++ ){
+            for( int d=0; d<9; d++ ){
+                PossibilitiesGrid[r][c][d] = true;
+            }
+        }
+    }
+    UpdatePossGrid();
+}
+
+void Sudoku9x9::PermuteRowsCols(int seed){
+
+    if( getType() != 1 ) return;
+
+    int perm[3] = {0,1,2};
+    int temp=0;
+    srand(seed);
+    for( int boxr=0; boxr<3; boxr++ ){
+        shuffle(perm,3);
+        for( int c=0; c<9; c++ ){
+            temp=GivenGrid[ boxr*3 + perm[0] ][c];
+            GivenGrid[ boxr*3 + perm[0] ][c] = GivenGrid[ boxr*3 + perm[1] ][c];
+            GivenGrid[ boxr*3 + perm[1] ][c] = GivenGrid[ boxr*3 + perm[2] ][c];
+            GivenGrid[ boxr*3 + perm[2] ][c] = temp;
+            temp=CurrentGrid[ boxr*3+perm[0] ][c];
+            CurrentGrid[ boxr*3 + perm[0] ][c] = CurrentGrid[ boxr*3 + perm[1] ][c];
+            CurrentGrid[ boxr*3 + perm[1] ][c] = CurrentGrid[ boxr*3 + perm[2] ][c];
+            CurrentGrid[ boxr*3 + perm[2] ][c] = temp;
+        }
+    }
+    for( int boxc=0; boxc<3; boxc++ ){
+        shuffle(perm,3);
+        for( int r=0; r<9; r++ ){
+            temp=GivenGrid[r][ boxc*3+perm[0] ];
+            GivenGrid[r][ boxc*3+perm[0] ] = GivenGrid[r][ boxc*3+perm[1] ];
+            GivenGrid[r][ boxc*3+perm[1] ] = GivenGrid[r][ boxc*3+perm[2] ];
+            GivenGrid[r][ boxc*3+perm[2] ] = temp;
+            temp=CurrentGrid[r][ boxc*3+perm[0] ];
+            CurrentGrid[r][ boxc*3+perm[0] ] = CurrentGrid[r][ boxc*3+perm[1] ];
+            CurrentGrid[r][ boxc*3+perm[1] ] = CurrentGrid[r][ boxc*3+perm[2] ];
+            CurrentGrid[r][ boxc*3+perm[2] ] = temp;
+        }
+    }
+
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<9; c++ ){
+            for( int d=0; d<9; d++ ){
+                PossibilitiesGrid[r][c][d] = true;
+            }
+        }
+    }
+    UpdatePossGrid();
 }

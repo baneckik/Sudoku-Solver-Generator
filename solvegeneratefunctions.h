@@ -221,6 +221,7 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
 
     // standard updating
     // When we have a given 5 digit then adjacent cells cannot contain 4 or 6.
+
     for(int r=0; r<9; r++){
         for(int c=0; c<9; c++){
             if( sudoku.CurrentGrid[r][c] != 0 ){
@@ -292,6 +293,7 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
 
     // Elimination technique nr 1:
     // When in certain place can go only 4,5,6, then in adjacent places cannot be 5.
+
     for( int r=0; r<8; r++ ){
         for( int c=0; c<9; c++ ){
             if( sudoku.CurrentGrid[r][c] == 0 ){
@@ -1058,6 +1060,7 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
             UpdatePossGrid_AntiKnight(sudoku,progress);
         }
         
+
         // Basic elimination technique nr 1
         // When in certain box digit can fit only into cells in one row/col, then the possibilities
         // from the rest of this row/col for this digit can be eliminated. 
