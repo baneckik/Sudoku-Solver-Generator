@@ -20,6 +20,7 @@ class Region{
         int RegionSize();
         bool IsConsistent();
         void PrintToConsole();
+        bool IsLeaf(int r, int c);
 };
 
 #endif
@@ -120,4 +121,15 @@ bool AreAdjacentByCorner(Region r1, Region r2, int wid, int hig){
         }
     }
     return false;
+}
+
+bool Region::IsLeaf(int r, int c){
+    /* Function checks if in case you take cell of coordinates (r,c) off the region 
+    it stays consistent. In summary, function returns false if you cannot take given cell away 
+    without making region inconsistent. */
+    if( r<0 || c<0 || r>=GridWidth || c>= GridHight ) return true;
+    Region reg(GridWidth, GridWidth);
+    for( int i=0;i<GridWidth*GridHight; i++ ) reg.Grid[i] = Grid[i];
+    reg.Grid[r*GridWidth+c] = false;
+    return reg.IsConsistent();
 }
