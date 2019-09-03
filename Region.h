@@ -15,6 +15,8 @@ class Region{
         Region(int wid, int hig , bool *grid);
         Region(int wid, int hig);
         
+        Region operator=(Region &reg);
+
         int getWidth(){ return GridWidth; }
         int getHight(){ return GridHight; }
         
@@ -39,6 +41,17 @@ Region::Region(int wid, int hig ) : GridWidth(wid), GridHight(hig) {
     Grid = new bool[wid*hig];
     for( int i=0;i<wid*hig; i++ ) Grid[i] = false;
 };
+
+Region Region::operator=(Region &reg){
+    GridWidth = reg.GridWidth;
+    GridHight = reg.GridHight;
+    Grid = new bool[GridWidth*GridHight];
+    for( int i=0; i<GridWidth*GridHight; i++ ){
+        Grid[i] = reg.Grid[i];
+    }
+
+    return *this;
+}
 
 int Region::RegionSize(){
     int sum = 0;
@@ -164,7 +177,7 @@ class GridOfRegions{
 #endif
 
 GridOfRegions::GridOfRegions(int g_width, int g_hight, int n_regions)
-                                : GridWidth(g_width), GridHight(g_hight) 
+                                : GridWidth(g_width), GridHight(g_hight), NumberOfRegions(n_regions)
 {
     Region r1(g_width, g_hight);
     Region *reg = new Region[n_regions];
@@ -223,6 +236,7 @@ void GridOfRegions::PrintToConsole(){
                 if( Regions[reg].Grid[r*GridWidth+c] ){ 
                     cout<<reg;
                     IsOccupied = true;
+                    break;
                 }
             }
             if( !IsOccupied ) std::cout<<"-";
