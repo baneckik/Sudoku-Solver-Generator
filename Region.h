@@ -16,15 +16,18 @@ class Region{
         Region(int wid, int hig);
         ~Region();
         
-        Region operator=(Region &reg);
+        void operator=(Region &reg);
 
         int getWidth(){ return GridWidth; }
         int getHight(){ return GridHight; }
+        void setWidth(int w){ GridWidth = w; }
+        void setHight(int h){ GridHight = h; }
         
         int RegionSize();
         bool IsConsistent();
         void PrintToConsole();
         bool IsLeaf(int r, int c);
+        bool IsBoundary(int r, int c);
 };
 
 #endif
@@ -47,15 +50,14 @@ Region::~Region(){
     delete[] Grid;
 }
 
-Region Region::operator=(Region &reg){
+void Region::operator=(Region &reg){
     GridWidth = reg.GridWidth;
     GridHight = reg.GridHight;
+    delete[] Grid;
     Grid = new bool[GridWidth*GridHight];
     for( int i=0; i<GridWidth*GridHight; i++ ){
         Grid[i] = reg.Grid[i];
     }
-
-    return *this;
 }
 
 int Region::RegionSize(){
@@ -157,3 +159,14 @@ bool Region::IsLeaf(int r, int c){
     return reg.IsConsistent();
 }
 
+bool Region::IsBoundary(int r, int c){
+    if( r>0 && Grid[(r-1)*GridWidth+c]==false )
+        return true;
+    if( r<GridHight-1 && Grid[(r+1)*GridWidth+c]==false )
+        return true;
+    if( c>0 && Grid[r*GridWidth+c-1]==false )
+        return true;
+    if( c<GridWidth-1 && Grid[r*GridWidth+c+1]==false )
+        return true;
+    return false;
+}

@@ -15,11 +15,19 @@ class GridOfRegions{
         GridOfRegions(int g_width, int g_hight, int n_regions);
         ~GridOfRegions();
 
-        void InsertRegion(int r, int c, int reg);
         bool IsOverlapping();
         bool IsFilled();
         bool AreRegionsEqual();
+        bool IsEquallyDivided();
+
+        bool IsEmptyCellAround(int r, int c);
+        bool IsLeafAround(int r, int c);
+
         void PrintToConsole();
+        void PrintToConsole2();
+
+        void UpdateGrid();
+        void InsertRegion(int r, int c, int reg);
         void CreateRegions(int seed);
 };
 
@@ -28,16 +36,18 @@ class GridOfRegions{
 GridOfRegions::GridOfRegions(int g_width, int g_hight, int n_regions)
                                 : GridWidth(g_width), GridHight(g_hight), NumberOfRegions(n_regions)
 {
-    Region r1(g_width, g_hight);
-    Region *reg = new Region[n_regions];
+    //Region r1(g_width, g_hight);
+    Regions = new Region[n_regions];
     for( int i=0; i<n_regions; i++ ){
-        reg[i] = r1;
-    }    
-    Regions = reg;
+        Regions[i].setWidth(g_width);
+        Regions[i].setHight(g_hight);
+        Regions[i].Grid = new bool[n_regions];
+        for( int j=0; j<g_width*g_hight; j++ )
+            Regions[i].Grid[j] = false;
+    }
 
-    int *grid = new int[GridWidth*GridHight];
-    for( int i=0; i<GridWidth*GridHight; i++ ) grid[i] = -1;
-    Grid = grid;
+    Grid = new int[GridWidth*GridHight];
+    for( int i=0; i<GridWidth*GridHight; i++ ) Grid[i] = -1;
 }
 
 GridOfRegions::~GridOfRegions(){
@@ -82,7 +92,50 @@ bool GridOfRegions::AreRegionsEqual(){
     return true;
 }
 
+bool GridOfRegions::IsEquallyDivided(){
+    return IsFilled() && AreRegionsEqual() && !IsOverlapping();
+}
+
+bool GridOfRegions::IsEmptyCellAround(int r, int c){
+    UpdateGrid();
+    if( r>0 && Grid[(r-1)*GridWidth+c]==-1 )
+        return true;
+    if( r<GridHight-1 && Grid[(r+1)*GridWidth+c]==-1 )
+        return true;
+    if( c>0 && Grid[r*GridWidth+c-1]==-1 )
+        return true;
+    if( c<GridWidth-1 && Grid[r*GridWidth+c+1]==-1 )
+        return true;
+    return false;
+}
+
+bool GridOfRegions::IsLeafAround(int r, int c){
+    UpdateGrid();
+    if(     r>0 && 
+            Grid[(r-1)*GridWidth+c]!=Grid[r*GridWidth+c] && 
+            Regions[ Grid[(r-1)*GridWidth+c] ].IsLeaf(r-1,c) 
+    )
+        return true;
+    if(     r<GridHight-1 && 
+            Grid[(r+1)*GridWidth+c]!=Grid[r*GridWidth+c] &&
+            Regions[ Grid[(r+1)*GridWidth+c] ].IsLeaf(r+1,c) 
+    )
+        return true;
+    if(     c>0 && 
+            Grid[r*GridWidth+c-1]!=Grid[r*GridWidth+c] &&
+            Regions[ Grid[r*GridWidth+c-1] ].IsLeaf(r,c-1) 
+    )
+        return true;
+    if(     c<GridWidth-1 && 
+            Grid[r*GridWidth+c+1]!=Grid[r*GridWidth+c] &&
+            Regions[ Grid[r*GridWidth+c+1] ].IsLeaf(r,c+1) 
+    )
+        return true;
+    return false;
+}
+
 void GridOfRegions::PrintToConsole(){
+    std::cout<<"\n";
     for( int r=0; r<GridHight; r++ ){
         for( int c=0; c<GridWidth; c++ ){
             bool IsOccupied = false;
@@ -99,11 +152,28 @@ void GridOfRegions::PrintToConsole(){
     }
 }
 
+void GridOfRegions::PrintToConsole2(){
+    std::cout<<"\n";
+    for( int r=0; r<GridHight; r++ ){
+        for( int c=0; c<GridWidth; c++ ){
+            if( Grid[r*GridWidth+c] == -1 )
+                std::cout<<"-";
+            else
+                std::cout<<Grid[r*GridWidth+c];
+        }
+        std::cout<<"\n";
+    }
+}
+
 void GridOfRegions::CreateRegions(int seed){
     if( (GridWidth*GridHight)%NumberOfRegions != 0 ) return;
+    int DestinationSize = GridWidth*GridHight/NumberOfRegions;
 
     srand(seed);
-    int iter=100, iter2=20, iter3, max_iter3=100, r, c;
+    int iter=100;   // How many times function can start from the beggining
+    int max_iter2=20;   // How many rounds function changes existing regions
+    int iter3, max_iter3=100;   // How many times function is choosing starting cells for regions
+    int r, c;
     for( int i=0; i<iter; i++ ){
         // staring cells for regions
         for( int reg=0; reg<NumberOfRegions; reg++ ){
@@ -118,23 +188,82 @@ void GridOfRegions::CreateRegions(int seed){
                 }
                 iter3++;
             }
-            Regions[reg].Grid[r*GridWidth+c] = true;
+            if( iter3 < max_iter3)
+                Regions[reg].Grid[r*GridWidth+c] = true;
+            else
+                return;    
         }
         // growing regions to full size
-        for( int j=0; j<iter2; j++ ){
+        bool WeAreStuck = false;
+        for( int j=0; j<max_iter2; j++ ){
+            if( WeAreStuck ) break;
+            // j-th round for growing regions
             for( int reg=0; reg<NumberOfRegions; reg++ ){
-                // for every region we choose the cell to grow region from
-                
-                int Cell = rand()%Regions[reg].RegionSize();
-                int C1 = 0;
-                for( int C=0; C<GridWidth*GridHight; C++ ){
-                    if( Regions[reg].Grid[C] && C1 == Cell ){
+                if( WeAreStuck ) break;
+                // for every region
+                for( int k=0; k<j+2-Regions[reg].RegionSize(); k++ ){
+                    // for region reg we add "k" cells to make all regions equal
+                    // Region size should equal min(j+2,9) after j-th round
+                    
+                    if( Regions[reg].RegionSize()!=DestinationSize ) break;
+                    // for every region we choose the cell "Cell" to grow region from
+                    int progress = false;
+                    int Cell = rand()%Regions[reg].RegionSize(); // first candidate for grow cell
+                    int Cell1 = 0, iter4=0;
+                    for( int C=0; C<GridWidth*GridHight && iter4<Regions[reg].RegionSize(); C++ ){
+                        if( Regions[reg].Grid[C] && Cell1 == Cell ){
+                            if( Regions[reg].IsBoundary(C/GridWidth,C%GridWidth) && 
+                                ( IsEmptyCellAround(C/GridWidth,C%GridWidth) || IsLeafAround(C/GridWidth,C%GridWidth) ) ){
+                                // We have found good cell to grow region from
+                                Cell1 = C; // Cell1 is now index of our Cell in Grid
+                                progress = true;
+                                break;
+                            }
+                            else{
+                                // We are looking for another good cell to grow region from
+                                Cell++;
+                                Cell = Cell%Regions[reg].RegionSize();
+                                C=0;
+                                Cell1=-1;
+                                iter4++;
+                            }
+                        }
+                        if( Regions[reg].Grid[C] ) Cell1++;
+                    }
+                    
+                    if( !progress ){
+                        // means if we haven't found a cell good to grow from
+                        WeAreStuck = true;
+                        break;
+                    }else{
+                        // if we have found a cell good to grow from
                         
                     }
-                    if( Regions[reg].Grid[C] ) C1++;
+
+
                 }
             }
-            if( IsFilled() && AreRegionsEqual() ) return;
+            if( IsEquallyDivided() ){ 
+                UpdateGrid();
+                return;
+            }
+        }
+    }
+}
+
+void GridOfRegions::UpdateGrid(){
+    for( int r=0; r<GridHight; r++ ){
+        for( int c=0; c<GridWidth; c++ ){
+            bool IsOccupied = false;
+            for( int reg=0; reg<NumberOfRegions; reg++ ){
+                if( Regions[reg].Grid[r*GridWidth+c] ){ 
+                    Grid[r*GridWidth+c] = reg;
+                    IsOccupied = true;
+                    break;
+                }
+            }
+            if( !IsOccupied ) 
+                Grid[r*GridWidth+c] = -1;
         }
     }
 }
