@@ -176,13 +176,11 @@ void GridOfRegions::CreateRegions(int seed){
     int r, c;
     for( int i=0; i<iter; i++ ){
         // Cleaning the existing regions
-        //delete[] Regions;
-        //delete[] Grid;
         Regions = new Region[NumberOfRegions];
         for( int i=0; i<NumberOfRegions; i++ ){
             Regions[i].setWidth(GridWidth);
             Regions[i].setHight(GridHight);
-            Regions[i].Grid = new bool[NumberOfRegions];
+            Regions[i].Grid = new bool[GridWidth*GridHight];
             for( int j=0; j<GridWidth*GridHight; j++ )
                 Regions[i].Grid[j] = false;
         }
@@ -209,7 +207,7 @@ void GridOfRegions::CreateRegions(int seed){
             else
                 return;    
         }
-
+        std::cout<<"======================\n";
         PrintToConsole();
 
         // growing regions to full size
@@ -224,17 +222,26 @@ void GridOfRegions::CreateRegions(int seed){
                     // for region reg we add "k" cells to make all regions equal
                     // Region size should equal min(j+2,9) after j-th round
                     
-                    PrintToConsole();
+                    //PrintToConsole();
 
-                    if( Regions[reg].RegionSize()!=DestinationSize ) break;
+                    if( Regions[reg].RegionSize() == DestinationSize ) break;
                     // for every region we choose the cell "Cell" to grow region from
                     int progress = false;
+                    int check = Regions[0].RegionSize();
+                    int check1 = Regions[1].RegionSize();
+                    int check2 = Regions[2].RegionSize();
+                    int check3 = Regions[3].RegionSize();
+                    int check4 = Regions[4].RegionSize();
+                    
+                    
                     int Cell = rand()%Regions[reg].RegionSize(); // first candidate for grow cell
-                    int Cell1 = 0, iter4=0;
+                    int Cell1 = -1, iter4=0;
                     for( int C=0; C<GridWidth*GridHight && iter4<Regions[reg].RegionSize(); C++ ){
+                        if( Regions[reg].Grid[C] ) Cell1++;
+
                         if( Regions[reg].Grid[C] && Cell1 == Cell ){
                             if( Regions[reg].IsBoundary(C/GridWidth,C%GridWidth) && 
-                                ( IsEmptyCellAround(C/GridWidth,C%GridWidth) || IsLeafAround(C/GridWidth,C%GridWidth) ) ){
+                                IsEmptyCellAround(C/GridWidth,C%GridWidth) ){
                                 // We have found good cell to grow region from
                                 Cell1 = C; // Cell1 is now index of our Cell in Grid
                                 r = Cell1/GridWidth;
@@ -246,14 +253,45 @@ void GridOfRegions::CreateRegions(int seed){
                                 // We are looking for another good cell to grow region from
                                 Cell++;
                                 Cell = Cell%Regions[reg].RegionSize();
-                                C=0;
+                                C=-1;
                                 Cell1=-1;
                                 iter4++;
                             }
                         }
-                        if( Regions[reg].Grid[C] ) Cell1++;
+                        
+                    }
+                    std::cout<<progress<<"\n";
+                    // if there is no cell touching any empty cell around
+                    // we are looking for cells that are leaves of other regions
+                    if( !progress ){
+                        int Cell = rand()%Regions[reg].RegionSize(); // first candidate for grow cell
+                        int Cell1 = 0, iter4=0;
+                        for( int C=0; C<GridWidth*GridHight && iter4<Regions[reg].RegionSize(); C++ ){
+                            if( Regions[reg].Grid[C] && Cell1 == Cell ){
+                                if( Regions[reg].IsBoundary(C/GridWidth,C%GridWidth) && 
+                                    IsLeafAround(C/GridWidth,C%GridWidth) ){
+                                    // We have found good cell to grow region from
+                                    Cell1 = C; // Cell1 is now index of our Cell in Grid
+                                    r = Cell1/GridWidth;
+                                    c = Cell1%GridWidth;
+                                    progress = true;
+                                    break;
+                                }
+                                else{
+                                    // We are looking for another good cell to grow region from
+                                    Cell++;
+                                    Cell = Cell%Regions[reg].RegionSize();
+                                    C=0;
+                                    Cell1=-1;
+                                    iter4++;
+                                }
+                            }
+                            if( Regions[reg].Grid[C] ) Cell1++;
+                        }
                     }
                     
+                    std::cout<<r<<" "<<c<<" "<<reg<<"\n";
+
                     if( !progress ){
                         // means if we haven't found a cell good to grow from
                         WeAreStuck = true;
@@ -262,28 +300,34 @@ void GridOfRegions::CreateRegions(int seed){
                         // if we have found a cell good to grow from
 
                         // if there is an empty cell around
-                        if( IsEmptyCellAround(Cell1/GridWidth,Cell1%GridWidth) ){
-                            int directories[4] = {0,1,2,3};
-                            shuffle(directories,4);
+                        if( IsEmptyCellAround(r,c) ){
+                            std::vector<int> directories = {0,1,2,3};
+                            std::random_device rd;
+                            std::mt19937 g(rd());
+                            std::shuffle(directories.begin(),directories.end(),g);
                             for( int l=0; l<4; l++ ){
                                 // cell to the top is empty
                                 if( directories[l] == 0 && r>0 && Grid[Cell1-GridWidth] == -1 ){
-                                    InsertRegion(r-1,c,reg);
+                                    InsertRegion(r-1,c,reg); std::cout<<"wstaw"<<r-1<<c<<reg<<"\n";
+                                    //PrintToConsole2();
                                     break;
                                 }
                                 // cell to the bottom is empty
                                 if( directories[l] == 1 && r<GridHight-1 && Grid[Cell1+GridWidth] == -1 ){
-                                    InsertRegion(r+1,c,reg);
+                                    InsertRegion(r+1,c,reg); std::cout<<"wstaw"<<r+1<<c<<reg<<"\n";
+                                    //PrintToConsole2();
                                     break;
                                 }
                                 // cell to the top is empty
                                 if( directories[l] == 2 && c>0 && Grid[Cell1-1] == -1 ){
-                                    InsertRegion(r,c-1,reg);
+                                    InsertRegion(r,c-1,reg); std::cout<<"wstaw"<<r<<c-1<<reg<<"\n";
+                                    //PrintToConsole2();
                                     break;
                                 }
                                 // cell to the bottom is empty
                                 if( directories[l] == 3 && c<GridWidth-1 && Grid[Cell1+1] == -1 ){
-                                    InsertRegion(r,c+1,reg);
+                                    InsertRegion(r,c+1,reg); std::cout<<"wstaw"<<r<<c+1<<reg<<"\n";
+                                    //PrintToConsole2();
                                     break;
                                 }
                             }
@@ -291,7 +335,7 @@ void GridOfRegions::CreateRegions(int seed){
 
                         //if there is a leaf to take from another region around
                         if( IsLeafAround(Cell1/GridWidth,Cell1%GridWidth) ){
-
+                                
                         }
                     }
                 }

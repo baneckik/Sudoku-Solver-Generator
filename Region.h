@@ -1,4 +1,7 @@
 #include <iostream>
+#include <random>
+#include <algorithm>
+#include <iterator>
 
 #ifndef REGION
 #define REGION
@@ -54,8 +57,8 @@ void Region::operator=(Region &reg){
     GridWidth = reg.GridWidth;
     GridHight = reg.GridHight;
     delete[] Grid;
-    Grid = new bool[GridWidth*GridHight];
-    for( int i=0; i<GridWidth*GridHight; i++ ){
+    Grid = new bool[reg.GridWidth*reg.GridHight];
+    for( int i=0; i<reg.GridWidth*reg.GridHight; i++ ){
         Grid[i] = reg.Grid[i];
     }
 }

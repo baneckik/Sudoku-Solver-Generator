@@ -1,6 +1,8 @@
 #include <iostream>
 #include <algorithm>
 #include <stdlib.h>
+#include "GridOfRegions.h"
+
 #ifndef SUDOKU9x9
 #define SUDOKU9x9
 
