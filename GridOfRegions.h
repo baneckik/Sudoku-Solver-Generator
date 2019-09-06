@@ -41,7 +41,7 @@ GridOfRegions::GridOfRegions(int g_width, int g_hight, int n_regions)
     for( int i=0; i<n_regions; i++ ){
         Regions[i].setWidth(g_width);
         Regions[i].setHight(g_hight);
-        Regions[i].Grid = new bool[n_regions];
+        Regions[i].Grid = new bool[g_width*g_hight];
         for( int j=0; j<g_width*g_hight; j++ )
             Regions[i].Grid[j] = false;
     }
@@ -175,6 +175,20 @@ void GridOfRegions::CreateRegions(int seed){
     int iter3, max_iter3=100;   // How many times function is choosing starting cells for regions
     int r, c;
     for( int i=0; i<iter; i++ ){
+        // Cleaning the existing regions
+        //delete[] Regions;
+        //delete[] Grid;
+        Regions = new Region[NumberOfRegions];
+        for( int i=0; i<NumberOfRegions; i++ ){
+            Regions[i].setWidth(GridWidth);
+            Regions[i].setHight(GridHight);
+            Regions[i].Grid = new bool[NumberOfRegions];
+            for( int j=0; j<GridWidth*GridHight; j++ )
+                Regions[i].Grid[j] = false;
+        }
+        Grid = new int[GridWidth*GridHight];
+        for( int i=0; i<GridWidth*GridHight; i++ ) Grid[i] = -1;
+
         // staring cells for regions
         for( int reg=0; reg<NumberOfRegions; reg++ ){
             r = rand()%GridHight;
@@ -188,11 +202,16 @@ void GridOfRegions::CreateRegions(int seed){
                 }
                 iter3++;
             }
-            if( iter3 < max_iter3)
+            if( iter3 < max_iter3){
                 Regions[reg].Grid[r*GridWidth+c] = true;
+                Grid[r*GridWidth+c] = reg;    
+            }
             else
                 return;    
         }
+
+        PrintToConsole();
+
         // growing regions to full size
         bool WeAreStuck = false;
         for( int j=0; j<max_iter2; j++ ){
@@ -205,6 +224,8 @@ void GridOfRegions::CreateRegions(int seed){
                     // for region reg we add "k" cells to make all regions equal
                     // Region size should equal min(j+2,9) after j-th round
                     
+                    PrintToConsole();
+
                     if( Regions[reg].RegionSize()!=DestinationSize ) break;
                     // for every region we choose the cell "Cell" to grow region from
                     int progress = false;
@@ -216,6 +237,8 @@ void GridOfRegions::CreateRegions(int seed){
                                 ( IsEmptyCellAround(C/GridWidth,C%GridWidth) || IsLeafAround(C/GridWidth,C%GridWidth) ) ){
                                 // We have found good cell to grow region from
                                 Cell1 = C; // Cell1 is now index of our Cell in Grid
+                                r = Cell1/GridWidth;
+                                c = Cell1%GridWidth;
                                 progress = true;
                                 break;
                             }
@@ -237,10 +260,40 @@ void GridOfRegions::CreateRegions(int seed){
                         break;
                     }else{
                         // if we have found a cell good to grow from
-                        
+
+                        // if there is an empty cell around
+                        if( IsEmptyCellAround(Cell1/GridWidth,Cell1%GridWidth) ){
+                            int directories[4] = {0,1,2,3};
+                            shuffle(directories,4);
+                            for( int l=0; l<4; l++ ){
+                                // cell to the top is empty
+                                if( directories[l] == 0 && r>0 && Grid[Cell1-GridWidth] == -1 ){
+                                    InsertRegion(r-1,c,reg);
+                                    break;
+                                }
+                                // cell to the bottom is empty
+                                if( directories[l] == 1 && r<GridHight-1 && Grid[Cell1+GridWidth] == -1 ){
+                                    InsertRegion(r+1,c,reg);
+                                    break;
+                                }
+                                // cell to the top is empty
+                                if( directories[l] == 2 && c>0 && Grid[Cell1-1] == -1 ){
+                                    InsertRegion(r,c-1,reg);
+                                    break;
+                                }
+                                // cell to the bottom is empty
+                                if( directories[l] == 3 && c<GridWidth-1 && Grid[Cell1+1] == -1 ){
+                                    InsertRegion(r,c+1,reg);
+                                    break;
+                                }
+                            }
+                        }
+
+                        //if there is a leaf to take from another region around
+                        if( IsLeafAround(Cell1/GridWidth,Cell1%GridWidth) ){
+
+                        }
                     }
-
-
                 }
             }
             if( IsEquallyDivided() ){ 
