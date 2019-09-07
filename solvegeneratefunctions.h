@@ -1,5 +1,5 @@
 #include <vector>
-#include "sudoku9x9.h"
+#include "sudoku9x9irregular.h"
 using namespace std;
 
 
@@ -220,7 +220,7 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
     if(sudoku.getType() != 3) return;
 
     // standard updating
-    // when we have a given 5 digit then adjacent cells cannot contain 4 or 6.
+    // When we have a given 5 digit then adjacent cells cannot contain 4 or 6.
     for(int r=0; r<9; r++){
         for(int c=0; c<9; c++){
             if( sudoku.CurrentGrid[r][c] != 0 ){
@@ -291,7 +291,7 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
     }
 
     // Elimination technique nr 1:
-    // when in certain place can go only 4,5,6, then in adjacent places cannot be 5.
+    // When in certain place can go only 4,5,6, then in adjacent places cannot be 5.
     for( int r=0; r<8; r++ ){
         for( int c=0; c<9; c++ ){
             if( sudoku.CurrentGrid[r][c] == 0 ){
@@ -305,14 +305,22 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
                         if( sudoku.PossibilitiesGrid[r][c][d1] == true ) { sum++; break; }
                     }
                     if( sum == 0 ){
-                        if( r != 0 )
+                        if( r != 0 && sudoku.PossibilitiesGrid[r-1][c][d] == true ){
                             sudoku.PossibilitiesGrid[r-1][c][d] = false;
-                        if( r != 8 )
+                            progress = true;
+                        }
+                        if( r != 8 && sudoku.PossibilitiesGrid[r+1][c][d] == true ){
                             sudoku.PossibilitiesGrid[r+1][c][d] = false;
-                        if( c != 0 )
+                            progress = true;    
+                        }
+                        if( c != 0 && sudoku.PossibilitiesGrid[r][c-1][d] == true ){
                             sudoku.PossibilitiesGrid[r][c-1][d] = false;
-                        if( c != 8 )
+                            progress = true;    
+                        }
+                        if( c != 8 && sudoku.PossibilitiesGrid[r][c+1][d] == true ){
                             sudoku.PossibilitiesGrid[r][c+1][d] = false;
+                            progress = true;    
+                        }
                         break;
                     }
                 }
@@ -320,7 +328,7 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
         }
     }
     // Elimination technique nr 2:
-    // when in certain place can go only 4,5, then in adjacent places cannot be 4 nor 5.
+    // When in certain place can go only 4,5, then in adjacent places cannot be 4 nor 5.
     for( int r=0; r<8; r++ ){
         for( int c=0; c<9; c++ ){
             if( sudoku.CurrentGrid[r][c] == 0 ){
@@ -335,20 +343,44 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
                     }
                     if( sum == 0 ){
                         if( r != 0 ){
-                            sudoku.PossibilitiesGrid[r-1][c][d] = false;
-                            sudoku.PossibilitiesGrid[r-1][c][d+1] = false;
+                            if( sudoku.PossibilitiesGrid[r-1][c][d] ==  true ){
+                                sudoku.PossibilitiesGrid[r-1][c][d] = false;
+                                progress = true;
+                            }
+                            if( sudoku.PossibilitiesGrid[r-1][c][d+1] ==  true ){
+                                sudoku.PossibilitiesGrid[r-1][c][d+1] = false;
+                                progress = true;
+                            }
                         }
                         if( r != 8 ){
-                            sudoku.PossibilitiesGrid[r+1][c][d] = false;
-                            sudoku.PossibilitiesGrid[r+1][c][d+1] = false;
+                            if( sudoku.PossibilitiesGrid[r+1][c][d] ==  true ){
+                                sudoku.PossibilitiesGrid[r+1][c][d] = false;
+                                progress = true;
+                            }
+                            if( sudoku.PossibilitiesGrid[r+1][c][d+1] ==  true ){
+                                sudoku.PossibilitiesGrid[r+1][c][d+1] = false;
+                                progress = true;
+                            }
                         }
                         if( c != 0 ){
-                            sudoku.PossibilitiesGrid[r][c-1][d] = false;
-                            sudoku.PossibilitiesGrid[r][c-1][d+1] = false;
+                            if( sudoku.PossibilitiesGrid[r][c-1][d] ==  true ){
+                                sudoku.PossibilitiesGrid[r][c-1][d] = false;
+                                progress = true;
+                            }
+                            if( sudoku.PossibilitiesGrid[r][c-1][d+1] ==  true ){
+                                sudoku.PossibilitiesGrid[r][c-1][d+1] = false;
+                                progress = true;
+                            }
                         }
                         if( c != 8 ){
-                            sudoku.PossibilitiesGrid[r][c+1][d] = false;
-                            sudoku.PossibilitiesGrid[r][c+1][d+1] = false;
+                            if( sudoku.PossibilitiesGrid[r][c+1][d] ==  true ){
+                                sudoku.PossibilitiesGrid[r][c+1][d] = false;
+                                progress = true;
+                            }
+                            if( sudoku.PossibilitiesGrid[r][c+1][d+1] ==  true ){
+                                sudoku.PossibilitiesGrid[r][c+1][d+1] = false;
+                                progress = true;
+                            }
                         }
                         break;
                     }
@@ -357,7 +389,7 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
         }
     }
     // Elimination technique nr 3:
-    // when in certain row/col 5 can fit only into three consecutive places,
+    // When in certain row/col 5 can fit only into three consecutive places,
     // 4 and 6 cannot be in the middle.
     for( int r=0; r<9; r++ ){
         for( int d=0; d<9; d++){
@@ -372,10 +404,14 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
                         if( sudoku.PossibilitiesGrid[r][c1][d] == true ) { sum++; break; }
                     }
                     if( sum == 0 ){
-                        if( d != 0 )
+                        if( d != 0 && sudoku.PossibilitiesGrid[r][c][d-1] == true ){
                             sudoku.PossibilitiesGrid[r][c][d-1] = false;
-                        if( d != 8 )
+                            progress = true;    
+                        }
+                        if( d != 8 && sudoku.PossibilitiesGrid[r][c][d+1] == true ){
                             sudoku.PossibilitiesGrid[r][c][d+1] = false;
+                            progress = true;    
+                        }
                         break;
                     }
                 }
@@ -395,10 +431,14 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
                         if( sudoku.PossibilitiesGrid[r1][c][d] == true ) { sum++; break; }
                     }
                     if( sum == 0 ){
-                        if( d != 0 )
+                        if( d != 0 && sudoku.PossibilitiesGrid[r][c][d-1] == true ){
                             sudoku.PossibilitiesGrid[r][c][d-1] = false;
-                        if( d != 8 )
+                            progress = true;    
+                        }
+                        if( d != 8 && sudoku.PossibilitiesGrid[r][c][d+1] == true ){
                             sudoku.PossibilitiesGrid[r][c][d+1] = false;
+                            progress = true;    
+                        }
                         break;
                     }
                 }
@@ -422,12 +462,24 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
                     }
                     if( sum == 0 ){
                         if( d != 0 ){
-                            sudoku.PossibilitiesGrid[r][c][d-1] = false;
-                            sudoku.PossibilitiesGrid[r][c+1][d-1] = false;
+                            if( sudoku.PossibilitiesGrid[r][c][d-1] == true ){
+                                sudoku.PossibilitiesGrid[r][c][d-1] = false;
+                                progress = true;
+                            }
+                            if( sudoku.PossibilitiesGrid[r][c+1][d-1] == true ){
+                                sudoku.PossibilitiesGrid[r][c+1][d-1] = false;
+                                progress = true;
+                            }
                         }
                         if( d != 8 ){
-                            sudoku.PossibilitiesGrid[r][c][d+1] = false;
-                            sudoku.PossibilitiesGrid[r][c+1][d+1] = false;
+                            if( sudoku.PossibilitiesGrid[r][c][d+1] == true ){
+                                sudoku.PossibilitiesGrid[r][c][d+1] = false;
+                                progress = true;
+                            }
+                            if( sudoku.PossibilitiesGrid[r][c+1][d+1] == true ){
+                                sudoku.PossibilitiesGrid[r][c+1][d+1] = false;
+                                progress = true;
+                            }
                         }
                         break;
                     }
@@ -449,15 +501,405 @@ void UpdatePossGrid_NonCon(Sudoku9x9 &sudoku, bool &progress){
                     }
                     if( sum == 0 ){
                         if( d != 0 ){
-                            sudoku.PossibilitiesGrid[r][c][d-1] = false;
-                            sudoku.PossibilitiesGrid[r+1][c][d-1] = false;
+                            if( sudoku.PossibilitiesGrid[r][c][d-1] == true ){
+                                sudoku.PossibilitiesGrid[r][c][d-1] = false;
+                                progress = true;
+                            }
+                            if( sudoku.PossibilitiesGrid[r+1][c][d-1] == true ){
+                                sudoku.PossibilitiesGrid[r+1][c][d-1] = false;
+                                progress = true;
+                            }
                         }
                         if( d != 8 ){
-                            sudoku.PossibilitiesGrid[r][c][d+1] = false;
-                            sudoku.PossibilitiesGrid[r+1][c][d+1] = false;
+                            if( sudoku.PossibilitiesGrid[r][c][d+1] == true ){
+                                sudoku.PossibilitiesGrid[r][c][d+1] = false;
+                                progress = true;
+                            }
+                            if( sudoku.PossibilitiesGrid[r+1][c][d+1] == true ){
+                                sudoku.PossibilitiesGrid[r+1][c][d+1] = false;
+                                progress = true;
+                            }
                         }
                         break;
                     }
+                }
+            }
+        }
+    }
+    // Elimination technique nr 5
+    // When in certain box 5 can fit only into a cross or T-shaped region,
+    // then 4 and 6 cannot fit into the middle cell of that cross/T-shape
+    for( int boxr=0; boxr<3; boxr++ ){
+        for( int boxc=0; boxc<3; boxc++ ){
+            for( int d=0; d<9; d++ ){
+                // center cross shape
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // left T-shape
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // right T-shape
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // upper T-shape
+                if( sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // lower T-shape
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                }
+            }
+        }
+    }
+    // Elimination technique nr 6 
+    // When in certain box 5 can fit only into two cells adjacent by corners.
+    // then 4 and 6 cannot fit into cells that touch theese two cells by side
+    for( int boxr=0; boxr<3; boxr++ ){
+        for( int boxc=0; boxc<3; boxc++ ){
+            for( int d=0; d<9; d++ ){
+                // oxx
+                // xox
+                // xxx
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                ){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // xox
+                // oxx
+                // xxx
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                ){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3][boxc*3][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3][boxc*3][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3][d+1] = false;
+                        progress = true;
+                    }
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // xox
+                // xxo
+                // xxx
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                ){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d+1] = false;
+                        progress = true;
+                    }
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // xxo
+                // xox
+                // xxx
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                ){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // xxx
+                // oxx
+                // xox
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                ){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // xxx
+                // xox
+                // oxx
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                ){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d+1] = false;
+                        progress = true;
+                    }
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // xxx
+                // xox
+                // xxo
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == true
+                ){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d+1] = false;
+                        progress = true;
+                    }
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                }
+                // xxx
+                // xxo
+                // xox
+                if( sudoku.PossibilitiesGrid[boxr*3][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3][boxc*3+2][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+2][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3][d] == false &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+1][d] == true &&
+                    sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d] == false
+                ){
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+1][boxc*3+1][d+1] = false;
+                        progress = true;
+                    }
+                    if( d != 0 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d-1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d-1] = false;
+                        progress = true;
+                    }
+                    if( d != 8 && sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d+1] == true ){
+                        sudoku.PossibilitiesGrid[boxr*3+2][boxc*3+2][d+1] = false;
+                        progress = true;
+                    }
+                }
+                
+            }
+        }
+    }
+}
+
+void UpdatePossGrid_AntiKnight(Sudoku9x9 &sudoku, bool &progress){
+    /* Function updates the PossGrid of given sudoku using Anti-Knight sudoku rules only.
+    It is only a suplementation for UpdatePossGrid method.
+    It does not updates PossGrid using standard classic sudoku rules! */
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<9; c++ ){
+            if( sudoku.CurrentGrid[r][c] != 0 ){
+                int d = sudoku.CurrentGrid[r][c]-1;
+                if( r>0 && c>1 && sudoku.PossibilitiesGrid[r-1][c-2][d] == true ){
+                    sudoku.PossibilitiesGrid[r-1][c-2][d] = false;
+                    progress = true;
+                }
+                if( r>1 && c>0 && sudoku.PossibilitiesGrid[r-2][c-1][d] == true ){
+                    sudoku.PossibilitiesGrid[r-2][c-1][d] = false;
+                    progress = true;
+                }
+                if( r>1 && c<8 && sudoku.PossibilitiesGrid[r-2][c+1][d] == true ){
+                    sudoku.PossibilitiesGrid[r-2][c+1][d] = false;
+                    progress = true;
+                }
+                if( r>0 && c<7 && sudoku.PossibilitiesGrid[r-1][c+2][d] == true ){
+                    sudoku.PossibilitiesGrid[r-1][c+2][d] = false;
+                    progress = true;
+                }
+                if( r<8 && c<7 && sudoku.PossibilitiesGrid[r+1][c+2][d] == true ){
+                    sudoku.PossibilitiesGrid[r+1][c+2][d] = false;
+                    progress = true;
+                }
+                if( r<7 && c<8 && sudoku.PossibilitiesGrid[r+2][c+1][d] == true ){
+                    sudoku.PossibilitiesGrid[r+2][c+1][d] = false;
+                    progress = true;
+                }
+                if( r<7 && c>0 && sudoku.PossibilitiesGrid[r+2][c-1][d] == true ){
+                    sudoku.PossibilitiesGrid[r+2][c-1][d] = false;
+                    progress = true;
+                }
+                if( r<8 && c>1 && sudoku.PossibilitiesGrid[r+1][c-2][d] == true ){
+                    sudoku.PossibilitiesGrid[r+1][c-2][d] = false;
+                    progress = true;
                 }
             }
         }
@@ -566,6 +1008,11 @@ Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
             UpdatePossGrid_NonCon(sudoku,progress);
         }
 
+        // Only for Anti-Knight sudoku
+        if( sudoku.getType() == 4 ){
+            UpdatePossGrid_AntiKnight(sudoku,progress);
+        }
+
         // actualization of CurrentGrid
         UpdateCurrentGrid(sudoku, progress);
         
@@ -606,6 +1053,11 @@ Sudoku9x9 TryToSolve(Sudoku9x9 sudoku){
             UpdatePossGrid_NonCon(sudoku,progress);
         }
 
+        // Only for Anti-Knight sudoku
+        if( sudoku.getType() == 4 ){
+            UpdatePossGrid_AntiKnight(sudoku,progress);
+        }
+        
         // Basic elimination technique nr 1
         // When in certain box digit can fit only into cells in one row/col, then the possibilities
         // from the rest of this row/col for this digit can be eliminated. 
@@ -1054,7 +1506,8 @@ void AddDigits(Sudoku9x9 &sudoku, int I){
     int i = 0, r, c;
 
     while( i < I ){
-        r = rand()%9, c = rand()%9;
+        r = rand()%9; 
+        c = rand()%9;
         if( sudoku.GivenGrid[r][c] == 0 ){
             sudoku.GivenGrid[r][c] = S.CurrentGrid[r][c];
             sudoku.CurrentGrid[r][c] = S.CurrentGrid[r][c];
