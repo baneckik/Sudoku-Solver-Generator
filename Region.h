@@ -66,7 +66,7 @@ void Region::operator=(Region &reg){
 int Region::RegionSize(){
     int sum = 0;
     for(int i=0; i<GridWidth*GridHight; i++ )
-        if( Grid[i] == true ) sum++;
+        if( Grid[i] ) sum++;
     return sum;
 };
 

@@ -175,6 +175,7 @@ void GridOfRegions::CreateRegions(int seed){
     int iter3, max_iter3=100;   // How many times function is choosing starting cells for regions
     int r, c;
     for( int i=0; i<iter; i++ ){
+        PrintToConsole2();
         // Cleaning the existing regions
         Regions = new Region[NumberOfRegions];
         for( int i=0; i<NumberOfRegions; i++ ){
@@ -265,8 +266,10 @@ void GridOfRegions::CreateRegions(int seed){
                     // we are looking for cells that are leaves of other regions
                     if( !progress ){
                         int Cell = rand()%Regions[reg].RegionSize(); // first candidate for grow cell
-                        int Cell1 = 0, iter4=0;
+                        int Cell1 = -1, iter4=0;
                         for( int C=0; C<GridWidth*GridHight && iter4<Regions[reg].RegionSize(); C++ ){
+                            if( Regions[reg].Grid[C] ) Cell1++;
+                            
                             if( Regions[reg].Grid[C] && Cell1 == Cell ){
                                 if( Regions[reg].IsBoundary(C/GridWidth,C%GridWidth) && 
                                     IsLeafAround(C/GridWidth,C%GridWidth) ){
@@ -286,19 +289,19 @@ void GridOfRegions::CreateRegions(int seed){
                                     iter4++;
                                 }
                             }
-                            if( Regions[reg].Grid[C] ) Cell1++;
+                            
                         }
                     }
-                    
-                    std::cout<<r<<" "<<c<<" "<<reg<<"\n";
+                    Cell1=r*GridWidth+c;
+                    std::cout<<Cell1<<" "<<r<<" "<<c<<" "<<reg<<"\n";
 
-                    if( !progress ){
+                    if( !progress || Cell1<0 ){
                         // means if we haven't found a cell good to grow from
                         WeAreStuck = true;
                         break;
                     }else{
                         // if we have found a cell good to grow from
-
+                        progress = false;
                         // if there is an empty cell around
                         if( IsEmptyCellAround(r,c) ){
                             std::vector<int> directories = {0,1,2,3};
@@ -310,33 +313,95 @@ void GridOfRegions::CreateRegions(int seed){
                                 if( directories[l] == 0 && r>0 && Grid[Cell1-GridWidth] == -1 ){
                                     InsertRegion(r-1,c,reg); std::cout<<"wstaw"<<r-1<<c<<reg<<"\n";
                                     //PrintToConsole2();
+                                    progress = true;
                                     break;
                                 }
                                 // cell to the bottom is empty
                                 if( directories[l] == 1 && r<GridHight-1 && Grid[Cell1+GridWidth] == -1 ){
                                     InsertRegion(r+1,c,reg); std::cout<<"wstaw"<<r+1<<c<<reg<<"\n";
                                     //PrintToConsole2();
+                                    progress = true;
                                     break;
                                 }
-                                // cell to the top is empty
+                                // cell to the left is empty
                                 if( directories[l] == 2 && c>0 && Grid[Cell1-1] == -1 ){
                                     InsertRegion(r,c-1,reg); std::cout<<"wstaw"<<r<<c-1<<reg<<"\n";
                                     //PrintToConsole2();
+                                    progress = true;
                                     break;
                                 }
-                                // cell to the bottom is empty
+                                // cell to the right is empty
                                 if( directories[l] == 3 && c<GridWidth-1 && Grid[Cell1+1] == -1 ){
                                     InsertRegion(r,c+1,reg); std::cout<<"wstaw"<<r<<c+1<<reg<<"\n";
                                     //PrintToConsole2();
+                                    progress = true;
                                     break;
                                 }
                             }
                         }
 
                         //if there is a leaf to take from another region around
-                        if( IsLeafAround(Cell1/GridWidth,Cell1%GridWidth) ){
-                                
+                        if( !progress && IsLeafAround(r,c) ){
+                            std::vector<int> directories = {0,1,2,3};
+                            std::random_device rd;
+                            std::mt19937 g(rd());
+                            std::shuffle(directories.begin(),directories.end(),g);
+                            for( int l=0; l<4; l++ ){
+                                // cell to the top is other regions leaf
+                                if( directories[l] == 0 && r>0 ){
+                                    int reg2 = Grid[Cell1-GridWidth];
+                                    if( reg2 != -1 && reg2 != reg && 
+                                    Regions[reg2].RegionSize()>1 && Regions[reg2].IsLeaf(r-1,c) 
+                                    ){
+                                        InsertRegion(r-1,c,reg); std::cout<<"wstaw"<<r-1<<c<<reg<<"\n";
+                                        //PrintToConsole2();
+                                        progress = true;
+                                        break;
+                                    }
+                                }
+                                // cell to the bottom is other regions leaf
+                                if( directories[l] == 1 && r<GridHight-1 ){
+                                    int reg2 = Grid[Cell1+GridWidth];
+                                    if( reg2 != -1 && reg2 != reg &&
+                                    Regions[reg2].RegionSize()>1 && Regions[reg2].IsLeaf(r+1,c) 
+                                    ){
+                                        InsertRegion(r+1,c,reg); std::cout<<"wstaw"<<r+1<<c<<reg<<"\n";
+                                        //PrintToConsole2();
+                                        progress = true;
+                                        break;
+                                    }
+                                }
+                                // cell to the left is other regions leaf
+                                if( directories[l] == 2 && c>0 ){
+                                    int reg2 = Grid[Cell1-1];
+                                    if( reg2 != -1 && reg2 != reg &&
+                                    Regions[reg2].RegionSize()>1 && Regions[reg2].IsLeaf(r,c-1) 
+                                    ){
+                                        InsertRegion(r,c-1,reg); std::cout<<"wstaw"<<r<<c-1<<reg<<"\n";
+                                        //PrintToConsole2();
+                                        progress = true;
+                                        break;
+                                    }
+                                }
+                                // cell to the right is other regions leaf
+                                if( directories[l] == 3 && c<GridWidth-1 ){
+                                    int reg2 = Grid[Cell1+1];
+                                    if( reg2 != -1 && reg2 != reg &&
+                                    Regions[reg2].RegionSize()>1 && Regions[reg2].IsLeaf(r,c+1) 
+                                    ){
+                                        InsertRegion(r,c+1,reg); std::cout<<"wstaw"<<r<<c+1<<reg<<"\n";
+                                        //PrintToConsole2();
+                                        progress = true;
+                                        break;
+                                    }
+                                }
+                            }    
                         }
+                    }
+
+                    if( !progress ){
+                        WeAreStuck = true;
+                        break;
                     }
                 }
             }
