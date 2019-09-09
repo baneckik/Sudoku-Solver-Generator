@@ -36,7 +36,10 @@ class Region{
 #endif
 
 Region::Region(){
-    
+    GridWidth = 9;
+    GridHight = 9;
+    Grid = new bool[81];
+    for( int i=0;i<81; i++ ) Grid[i] = false;
 }
 
 Region::Region(int wid, int hig , bool *grid) : GridWidth(wid), GridHight(hig) {
@@ -50,15 +53,14 @@ Region::Region(int wid, int hig ) : GridWidth(wid), GridHight(hig) {
 };
 
 Region::~Region(){
-    delete[] Grid;
+    //delete[] Grid;
 }
 
 void Region::operator=(Region &reg){
     GridWidth = reg.GridWidth;
     GridHight = reg.GridHight;
-    delete[] Grid;
-    Grid = new bool[reg.GridWidth*reg.GridHight];
-    for( int i=0; i<reg.GridWidth*reg.GridHight; i++ ){
+    
+   for( int i=0; i<reg.GridWidth*reg.GridHight; i++ ){
         Grid[i] = reg.Grid[i];
     }
 }

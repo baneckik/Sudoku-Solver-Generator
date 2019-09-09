@@ -12,8 +12,15 @@ class GridOfRegions{
         Region *Regions;
         int *Grid;
 
+        GridOfRegions();
         GridOfRegions(int g_width, int g_hight, int n_regions);
         ~GridOfRegions();
+
+        void operator=(GridOfRegions &gor);
+
+        int getGridWidth(){ return GridWidth; }
+        int getGridHight(){ return GridHight; }
+        int getNumberOfRegions(){ return NumberOfRegions; }
 
         bool IsOverlapping();
         bool IsFilled();
@@ -33,6 +40,24 @@ class GridOfRegions{
 
 #endif
 
+GridOfRegions::GridOfRegions(){
+    GridWidth = 9;
+    GridHight = 9;
+    NumberOfRegions = 9;
+    Regions = new Region[NumberOfRegions];
+    for( int i=0; i<9; i++ ){
+        Regions[i].setWidth(9);
+        Regions[i].setHight(9);
+        Regions[i].Grid = new bool[GridWidth*GridHight];
+        for( int j=0; j<9*9; j++ )
+            Regions[i].Grid[j] = false;
+    }
+
+    Grid = new int[GridWidth*GridHight];
+    for( int i=0; i<9*9; i++ ) Grid[i] = -1;
+    std::cout<<"wykonal sie konstruktor gridofregions\n";
+}
+
 GridOfRegions::GridOfRegions(int g_width, int g_hight, int n_regions)
                                 : GridWidth(g_width), GridHight(g_hight), NumberOfRegions(n_regions)
 {
@@ -51,8 +76,21 @@ GridOfRegions::GridOfRegions(int g_width, int g_hight, int n_regions)
 }
 
 GridOfRegions::~GridOfRegions(){
+    
     delete[] Regions;
     delete[] Grid;
+}
+
+void GridOfRegions::operator=(GridOfRegions &gor){
+    GridWidth = gor.getGridWidth();
+    GridHight = gor.getGridHight();
+    NumberOfRegions = gor.getNumberOfRegions();
+    
+    for( int reg=0; reg<NumberOfRegions; reg++ )
+        Regions[reg] = gor.Regions[reg];
+
+    for( int cell=0; cell<GridWidth*GridHight; cell++ )
+        Grid[cell] = gor.Grid[cell];
 }
 
 void GridOfRegions::InsertRegion(int r, int c, int reg){
@@ -175,8 +213,8 @@ void GridOfRegions::CreateRegions(int seed){
     int iter3, max_iter3=100;   // How many times function is choosing starting cells for regions
     int r, c;
     for( int i=0; i<iter; i++ ){
-        PrintToConsole2();
         // Cleaning the existing regions
+        delete[] Regions;
         Regions = new Region[NumberOfRegions];
         for( int i=0; i<NumberOfRegions; i++ ){
             Regions[i].setWidth(GridWidth);
@@ -208,8 +246,6 @@ void GridOfRegions::CreateRegions(int seed){
             else
                 return;    
         }
-        std::cout<<"======================\n";
-        PrintToConsole();
 
         // growing regions to full size
         bool WeAreStuck = false;
@@ -228,12 +264,6 @@ void GridOfRegions::CreateRegions(int seed){
                     if( Regions[reg].RegionSize() == DestinationSize ) break;
                     // for every region we choose the cell "Cell" to grow region from
                     int progress = false;
-                    int check = Regions[0].RegionSize();
-                    int check1 = Regions[1].RegionSize();
-                    int check2 = Regions[2].RegionSize();
-                    int check3 = Regions[3].RegionSize();
-                    int check4 = Regions[4].RegionSize();
-                    
                     
                     int Cell = rand()%Regions[reg].RegionSize(); // first candidate for grow cell
                     int Cell1 = -1, iter4=0;
@@ -261,7 +291,7 @@ void GridOfRegions::CreateRegions(int seed){
                         }
                         
                     }
-                    std::cout<<progress<<"\n";
+
                     // if there is no cell touching any empty cell around
                     // we are looking for cells that are leaves of other regions
                     if( !progress ){
@@ -293,8 +323,7 @@ void GridOfRegions::CreateRegions(int seed){
                         }
                     }
                     Cell1=r*GridWidth+c;
-                    std::cout<<Cell1<<" "<<r<<" "<<c<<" "<<reg<<"\n";
-
+                    
                     if( !progress || Cell1<0 ){
                         // means if we haven't found a cell good to grow from
                         WeAreStuck = true;
@@ -311,29 +340,25 @@ void GridOfRegions::CreateRegions(int seed){
                             for( int l=0; l<4; l++ ){
                                 // cell to the top is empty
                                 if( directories[l] == 0 && r>0 && Grid[Cell1-GridWidth] == -1 ){
-                                    InsertRegion(r-1,c,reg); std::cout<<"wstaw"<<r-1<<c<<reg<<"\n";
-                                    //PrintToConsole2();
+                                    InsertRegion(r-1,c,reg);
                                     progress = true;
                                     break;
                                 }
                                 // cell to the bottom is empty
                                 if( directories[l] == 1 && r<GridHight-1 && Grid[Cell1+GridWidth] == -1 ){
-                                    InsertRegion(r+1,c,reg); std::cout<<"wstaw"<<r+1<<c<<reg<<"\n";
-                                    //PrintToConsole2();
+                                    InsertRegion(r+1,c,reg);
                                     progress = true;
                                     break;
                                 }
                                 // cell to the left is empty
                                 if( directories[l] == 2 && c>0 && Grid[Cell1-1] == -1 ){
-                                    InsertRegion(r,c-1,reg); std::cout<<"wstaw"<<r<<c-1<<reg<<"\n";
-                                    //PrintToConsole2();
+                                    InsertRegion(r,c-1,reg);
                                     progress = true;
                                     break;
                                 }
                                 // cell to the right is empty
                                 if( directories[l] == 3 && c<GridWidth-1 && Grid[Cell1+1] == -1 ){
-                                    InsertRegion(r,c+1,reg); std::cout<<"wstaw"<<r<<c+1<<reg<<"\n";
-                                    //PrintToConsole2();
+                                    InsertRegion(r,c+1,reg);
                                     progress = true;
                                     break;
                                 }
@@ -353,8 +378,7 @@ void GridOfRegions::CreateRegions(int seed){
                                     if( reg2 != -1 && reg2 != reg && 
                                     Regions[reg2].RegionSize()>1 && Regions[reg2].IsLeaf(r-1,c) 
                                     ){
-                                        InsertRegion(r-1,c,reg); std::cout<<"wstaw"<<r-1<<c<<reg<<"\n";
-                                        //PrintToConsole2();
+                                        InsertRegion(r-1,c,reg);
                                         progress = true;
                                         break;
                                     }
@@ -365,8 +389,7 @@ void GridOfRegions::CreateRegions(int seed){
                                     if( reg2 != -1 && reg2 != reg &&
                                     Regions[reg2].RegionSize()>1 && Regions[reg2].IsLeaf(r+1,c) 
                                     ){
-                                        InsertRegion(r+1,c,reg); std::cout<<"wstaw"<<r+1<<c<<reg<<"\n";
-                                        //PrintToConsole2();
+                                        InsertRegion(r+1,c,reg);
                                         progress = true;
                                         break;
                                     }
@@ -377,8 +400,7 @@ void GridOfRegions::CreateRegions(int seed){
                                     if( reg2 != -1 && reg2 != reg &&
                                     Regions[reg2].RegionSize()>1 && Regions[reg2].IsLeaf(r,c-1) 
                                     ){
-                                        InsertRegion(r,c-1,reg); std::cout<<"wstaw"<<r<<c-1<<reg<<"\n";
-                                        //PrintToConsole2();
+                                        InsertRegion(r,c-1,reg);
                                         progress = true;
                                         break;
                                     }
@@ -389,8 +411,7 @@ void GridOfRegions::CreateRegions(int seed){
                                     if( reg2 != -1 && reg2 != reg &&
                                     Regions[reg2].RegionSize()>1 && Regions[reg2].IsLeaf(r,c+1) 
                                     ){
-                                        InsertRegion(r,c+1,reg); std::cout<<"wstaw"<<r<<c+1<<reg<<"\n";
-                                        //PrintToConsole2();
+                                        InsertRegion(r,c+1,reg);
                                         progress = true;
                                         break;
                                     }

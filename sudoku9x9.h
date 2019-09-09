@@ -8,7 +8,7 @@
 
 class Sudoku9x9{
     private:
-        int Type;       // 1 - Classic, 2 - Diagonal, 3 - Nonconsecutive, 4 - AntiKnight
+        int Type;       // 1 - Classic, 2 - Diagonal, 3 - Nonconsecutive, 4 - AntiKnight, 5 - Irregular
         int Status;     // 0 - Unknown, 1 - Solved, 2 - Unsolvable(by this solver), 3 - Ambiguous, 4 - Contradictionary
         int Difficulty; // 0 - Unknown, 1 - Very Easy, 2 - Easy, 3 - Hard, 4 - Very Hard
         int Seed;       // only if sudoku is generated, otherwise equals 0
@@ -17,6 +17,7 @@ class Sudoku9x9{
         int CurrentGrid[9][9];      // [row][column]
         bool PossibilitiesGrid[9][9][9];     // [row][column][digit]
 
+        Sudoku9x9();
         Sudoku9x9(int Given[9][9], int type = 1);
         //Sudoku9x9(Sudoku9x9 &sudoku);
 
@@ -25,9 +26,10 @@ class Sudoku9x9{
         int getDifficulty(){return Difficulty;}
         int getSeed(){return Seed;}
 
-        void setStatus(int s){Status = s;}
-        void setDifficulty(int d){Difficulty = d;}
-        void setSeed(int s){Seed = s;}
+        void setType(int t){ Type = t; }
+        void setStatus(int s){ Status = s; }
+        void setDifficulty(int d){ Difficulty = d; }
+        void setSeed(int s){ Seed = s; }
 
         int N_Given();     // number of digits given
         int N_Current();   // number of digits currently placed on the grid
@@ -36,11 +38,13 @@ class Sudoku9x9{
             // number of digits possible for a digit d in a row(type=0) or column(type=1) rc
 
         void UpdatePossGrid();
+        void ResetCurrentGrid();
         bool InsertRandomDigit();
         void PermuteDigits(int seed);
         void PermuteRowsCols(int seed);
 
         void PrintToConsole();
+        void PrintPossibilities();
 };
 
 #endif
@@ -59,6 +63,21 @@ void shuffle(int *array, size_t n){
     }
 }
 
+Sudoku9x9::Sudoku9x9(){
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++) {
+            GivenGrid[i][j] = 0;
+            CurrentGrid[i][j] = 0;
+        }
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++)
+            for (int k = 0; k < 9; k++)
+                PossibilitiesGrid[i][j][k] = true;
+    Type = 1;
+    Status = 0;
+    Difficulty = 0;
+    Seed = 0;
+}
 
 Sudoku9x9::Sudoku9x9(int Given[9][9], int type) : Type(type) {
     for (int i = 0; i < 9; i++)
@@ -158,6 +177,15 @@ void Sudoku9x9::PrintToConsole(){
         if ((r + 1) % 3 == 0)std::cout << std::endl;
         std::cout << std::endl;
     }
+}
+
+void Sudoku9x9::PrintPossibilities(){
+    for( int r=0; r<9; r++ )
+        for( int c=0;c<9;c++ ){
+            if( c%9 == 0 ) std::cout<<"\n";
+            std::cout<<N_Possibilities(r,c);
+        }
+    std::cout<<"\n";
 }
 
 void Sudoku9x9::UpdatePossGrid(){
@@ -793,6 +821,13 @@ void Sudoku9x9::UpdatePossGrid(){
             for (int r = 0; r<6; r++)
                 PossibilitiesGrid[r][3*boxc+1][d] = false;
     }
+}
+
+void Sudoku9x9::ResetCurrentGrid(){
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++) {
+            CurrentGrid[i][j] = GivenGrid[i][j];
+        }
 }
 
 bool Sudoku9x9::InsertRandomDigit(){
