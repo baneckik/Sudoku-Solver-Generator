@@ -37,11 +37,17 @@ class Sudoku9x9{
         int N_Possibilities(int d, int rc, bool type);
             // number of digits possible for a digit d in a row(type=0) or column(type=1) rc
 
+        bool IsFilled();
+        void UpdatePossGrid_RowsCols();
         void UpdatePossGrid();
         void ResetCurrentGrid();
         bool InsertRandomDigit();
+        void CreateFullGrid(int seed);
+
         void PermuteDigits(int seed);
         void PermuteRowsCols(int seed);
+        void PermuteBoxes(int seed);
+        void Transpose();
 
         void PrintToConsole();
         void PrintPossibilities();
@@ -186,6 +192,38 @@ void Sudoku9x9::PrintPossibilities(){
             std::cout<<N_Possibilities(r,c);
         }
     std::cout<<"\n";
+}
+
+bool Sudoku9x9::IsFilled() {
+    int suma = 0;
+    for (int r = 0; r < 9; r++)
+        for (int c = 0; c < 9; c++)
+            suma += CurrentGrid[r][c];
+    if (suma != 45 * 9) return false;
+    return true;
+}
+
+void Sudoku9x9::UpdatePossGrid_RowsCols(){
+    // basic actualization of PossibilitiesGrid in exact place, row and column
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            if (CurrentGrid[r][c] != 0) {
+                int D = CurrentGrid[r][c];
+                // eliminating possibilities in the exact place
+                for (int d = 0; d < 9; d++) if (d != D-1) {
+                    PossibilitiesGrid[r][c][d] = false;
+                }
+                // eliminating possibilities in the row
+                for (int c2 = 0; c2 < 9; c2++) if (c2 != c) {
+                    PossibilitiesGrid[r][c2][D-1] = false;
+                }
+                // eliminating possibilities in the column
+                for (int r2 = 0; r2 < 9; r2++) if (r2 != r) {
+                    PossibilitiesGrid[r2][c][D-1] = false;
+                }
+            }
+        }
+    }
 }
 
 void Sudoku9x9::UpdatePossGrid(){
@@ -925,4 +963,140 @@ void Sudoku9x9::PermuteRowsCols(int seed){
         }
     }
     UpdatePossGrid();
+}
+
+void Sudoku9x9::PermuteBoxes(int seed){
+    if( getType() != 1 ) return;
+
+    int perm[3] = {0,1,2};
+    int temp;
+    srand(seed);
+    // permuting rows of boxes
+    shuffle(perm,3);
+    for( int r=0; r<3; r++ ){
+        for( int c=0; c<9; c++ ){
+            temp=GivenGrid[ r + perm[0]*3 ][c];
+            GivenGrid[ r + perm[0]*3 ][c] = GivenGrid[ r + perm[1]*3 ][c];
+            GivenGrid[ r + perm[1]*3 ][c] = GivenGrid[ r + perm[2]*3 ][c];
+            GivenGrid[ r + perm[2]*3 ][c] = temp;
+            temp=CurrentGrid[ r + perm[0]*3 ][c];
+            CurrentGrid[ r + perm[0]*3 ][c] = CurrentGrid[ r + perm[1]*3 ][c];
+            CurrentGrid[ r + perm[1]*3 ][c] = CurrentGrid[ r + perm[2]*3 ][c];
+            CurrentGrid[ r + perm[2]*3 ][c] = temp;
+        }
+    }
+    // permuting columns of boxes
+    shuffle(perm,3);
+    for( int c=0; c<3; c++ ){
+        for( int r=0; r<9; r++ ){
+            temp=GivenGrid[r][ c + perm[0]*3 ];
+            GivenGrid[r][ c + perm[0]*3 ] = GivenGrid[r][ c + perm[1]*3 ];
+            GivenGrid[r][ c + perm[1]*3 ] = GivenGrid[r][ c + perm[2]*3 ];
+            GivenGrid[r][ c + perm[2]*3 ] = temp;
+            temp=CurrentGrid[r][ c + perm[0]*3 ];
+            CurrentGrid[r][ c + perm[0]*3 ] = CurrentGrid[r][ c + perm[1]*3 ];
+            CurrentGrid[r][ c + perm[1]*3 ] = CurrentGrid[r][ c + perm[2]*3 ];
+            CurrentGrid[r][ c + perm[2]*3 ] = temp;
+        }
+    }
+
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<9; c++ ){
+            for( int d=0; d<9; d++ ){
+                PossibilitiesGrid[r][c][d] = true;
+            }
+        }
+    }
+    UpdatePossGrid();
+}
+
+void Sudoku9x9::Transpose(){
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<r; c++ ){
+            int temp = GivenGrid[r][c];
+            GivenGrid[r][c] = GivenGrid[c][r];
+            GivenGrid[c][r] = temp;
+            temp = CurrentGrid[r][c];
+            CurrentGrid[r][c] = CurrentGrid[c][r];
+            CurrentGrid[c][r] = temp;
+        }
+    }
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<9; c++ ){
+            for( int d=0; d<9; d++ ){
+                PossibilitiesGrid[r][c][d] = true;
+            }
+        }
+    }
+    UpdatePossGrid();
+}
+
+void Sudoku9x9::CreateFullGrid(int seed){
+    /* Function creates random given and current grid filled with numbers from 1 to 9, respecting
+    unique numbers in every row and columns (it does not provide unique numbers in boxes).
+    Function resets previous given, current and Possibilities Grids. */
+
+    // reseting previous grids
+    for( int r=0; r<9; r++ ){
+        for( int c=0; c<9; c++ ){
+            GivenGrid[r][c] = (c+r)%9 + 1;
+            CurrentGrid[r][c] = (c+r)%9 + 1;
+        }
+    }
+    srand(seed);
+    int perm[9] = {0,1,2,3,4,5,6,7,8};
+
+    // permutating whole grid K - times
+    int K = 5;
+    for( int k=0; k<K; k++ ){
+        shuffle(perm,9);
+        // permutating all columns
+        for( int r=0; r<9; r++ ){
+            int temp=GivenGrid[r][perm[0]];
+            GivenGrid[r][perm[0]] = GivenGrid[r][perm[1]];
+            GivenGrid[r][perm[1]] = GivenGrid[r][perm[2]];
+            GivenGrid[r][perm[2]] = GivenGrid[r][perm[3]];
+            GivenGrid[r][perm[3]] = GivenGrid[r][perm[4]];
+            GivenGrid[r][perm[4]] = GivenGrid[r][perm[5]];
+            GivenGrid[r][perm[5]] = GivenGrid[r][perm[6]];
+            GivenGrid[r][perm[6]] = GivenGrid[r][perm[7]];
+            GivenGrid[r][perm[7]] = GivenGrid[r][perm[8]];
+            GivenGrid[r][perm[8]] = temp;
+            temp=CurrentGrid[r][perm[0]];
+            CurrentGrid[r][perm[0]] = CurrentGrid[r][perm[1]];
+            CurrentGrid[r][perm[1]] = CurrentGrid[r][perm[2]];
+            CurrentGrid[r][perm[2]] = CurrentGrid[r][perm[3]];
+            CurrentGrid[r][perm[3]] = CurrentGrid[r][perm[4]];
+            CurrentGrid[r][perm[4]] = CurrentGrid[r][perm[5]];
+            CurrentGrid[r][perm[5]] = CurrentGrid[r][perm[6]];
+            CurrentGrid[r][perm[6]] = CurrentGrid[r][perm[7]];
+            CurrentGrid[r][perm[7]] = CurrentGrid[r][perm[8]];
+            CurrentGrid[r][perm[8]] = temp;   
+        }
+        shuffle(perm,9);
+        // permutating all rows
+        
+        for( int c=0; c<9; c++ ){
+            int temp=GivenGrid[perm[0]][c];
+            GivenGrid[perm[0]][c] = GivenGrid[perm[1]][c];
+            GivenGrid[perm[1]][c] = GivenGrid[perm[2]][c];
+            GivenGrid[perm[2]][c] = GivenGrid[perm[3]][c];
+            GivenGrid[perm[3]][c] = GivenGrid[perm[4]][c];
+            GivenGrid[perm[4]][c] = GivenGrid[perm[5]][c];
+            GivenGrid[perm[5]][c] = GivenGrid[perm[6]][c];
+            GivenGrid[perm[6]][c] = GivenGrid[perm[7]][c];
+            GivenGrid[perm[7]][c] = GivenGrid[perm[8]][c];
+            GivenGrid[perm[8]][c] = temp;
+            temp=CurrentGrid[perm[0]][c];
+            CurrentGrid[perm[0]][c] = CurrentGrid[perm[1]][c];
+            CurrentGrid[perm[1]][c] = CurrentGrid[perm[2]][c];
+            CurrentGrid[perm[2]][c] = CurrentGrid[perm[3]][c];
+            CurrentGrid[perm[3]][c] = CurrentGrid[perm[4]][c];
+            CurrentGrid[perm[4]][c] = CurrentGrid[perm[5]][c];
+            CurrentGrid[perm[5]][c] = CurrentGrid[perm[6]][c];
+            CurrentGrid[perm[6]][c] = CurrentGrid[perm[7]][c];
+            CurrentGrid[perm[7]][c] = CurrentGrid[perm[8]][c];
+            CurrentGrid[perm[8]][c] = temp;
+        }
+    }
 }
