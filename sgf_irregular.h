@@ -75,19 +75,19 @@ bool IsContradictory(Sudoku9x9Irregular &sudoku){
 
 void UpdatePossGrid_Regions(Sudoku9x9Irregular &sudoku, bool &progress){
     // basic actualization of PossibilitiesGrid in irregular regions of digit from 1 to 9
-    if( !(*sudoku.GoR).IsEquallyDivided() ) return;
+    if( !sudoku.GoR->IsEquallyDivided() ) return;
 
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             if (sudoku.CurrentGrid[r][c] != 0) {
                 int D = sudoku.CurrentGrid[r][c];
-                int reg = (*sudoku.GoR).Grid[r*9+c];
+                int reg = sudoku.GoR->Grid[r*9+c];
                 // eliminating possibilities in the region
                 for( int Cell=0; Cell<81; Cell++ ){
                     if ( (*sudoku.GoR).Grid[Cell] == reg && Cell != r*9+c ) {
                         if (sudoku.PossibilitiesGrid[Cell/9][Cell%9][D-1] == true) {
-                                progress = true;
-                                sudoku.PossibilitiesGrid[Cell/9][Cell%9][D-1] = false;
+                            progress = true;
+                            sudoku.PossibilitiesGrid[Cell/9][Cell%9][D-1] = false;
                         }
                     }
                 }
@@ -166,11 +166,9 @@ void UpdateCurrentGrid(Sudoku9x9Irregular &sudoku, bool &progress){
 void TryToSolve(Sudoku9x9Irregular &sudoku){
     /* Function tries to solve sudoku using only hidden singles
     and rows/cols/boxes where certain digit can fit into only one place. */
-    std::cout<<"Trytosolve function for irregular\n";
     
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); // contradictory
-        std::cout<<"Jest sprzecznosc!!!\n";
         return;
     }
 
@@ -182,6 +180,39 @@ void TryToSolve(Sudoku9x9Irregular &sudoku){
         UpdatePossGrid_RowsCols(sudoku, progress);
         UpdatePossGrid_Regions(sudoku, progress);
         
+        // trick nr 1
+        for( int reg=0; reg<9; reg++ ){
+            for( int d=0; d<9; d++ ){
+                // horizontally
+                for( int r=0; r<9; r++ ){
+                    if( sudoku.IsDigitOnlyInOneRow(reg,d,r) ){
+                        for( int c=0; c<9 ; c++ ){
+                            if( (*sudoku.GoR).Grid[r*9+c] != reg ){
+                                if( sudoku.PossibilitiesGrid[r][c][d] ){
+                                    sudoku.PossibilitiesGrid[r][c][d] = false;
+                                    progress = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                // vertically
+                for( int c=0; c<9; c++ ){
+                    if( sudoku.IsDigitOnlyInOneColumn(reg,d,c) ){
+                        for( int r=0; r<9 ; r++ ){
+                            if( (*sudoku.GoR).Grid[r*9+c] != reg ){
+                                if( sudoku.PossibilitiesGrid[r][c][d] ){
+                                    sudoku.PossibilitiesGrid[r][c][d] = false;
+                                    progress = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
         // actualization of CurrentGrid
         UpdateCurrentGrid(sudoku, progress);
         
@@ -191,17 +222,15 @@ void TryToSolve(Sudoku9x9Irregular &sudoku){
 void Solve(Sudoku9x9Irregular &sudoku){
     /* Main solving function.
     Solves sudoku, estimates difficulty and gives appropriate status. */
-    std::cout<<"Solving...\n";
+
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); // contradictory
-        std::cout<<"bylo sprzeczne :(\n";
         return;
     }
 
     TryToSolve(sudoku);
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); 		// contradictory
-        std::cout<<"bylo sprzeczne :(\n";
         return;
     }
     if( IsFilled(sudoku) ){
@@ -246,24 +275,38 @@ void Solve(Sudoku9x9Irregular &sudoku){
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 temp_CurrentGrid[r][c] = sudoku.CurrentGrid[r][c];
+                        
 
-                        // first option
+                        // first option: trying to solve and save info(is contradictory or filled)
                         sudoku.CurrentGrid[r][c1] = d+1;
                         TryToSolve(sudoku);
                         bool contraS1 = IsContradictory(sudoku), filledS1 = IsFilled(sudoku);
+
+                        // reseting sudoku to the state before first option
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 sudoku.CurrentGrid[r][c] = temp_CurrentGrid[r][c];
+                        for( int r=0;r<9; r++ )
+                            for( int c=0; c<9; c++)
+                                for( int d=0; d<9; d++ )
+                                    sudoku.PossibilitiesGrid[r][c][d] = true;
+                        sudoku.UpdatePossGrid();
 
-                        // second option
+                        // second option: trying to solve and save info(is contradictory or filled)
                         sudoku.CurrentGrid[r][c2] = d+1;
                         TryToSolve(sudoku);
                         bool contraS2 = IsContradictory(sudoku), filledS2 = IsFilled(sudoku);
+
+                        // reseting sudoku to the state before first option
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 sudoku.CurrentGrid[r][c] = temp_CurrentGrid[r][c];
+                        for( int r=0;r<9; r++ )
+                            for( int c=0; c<9; c++)
+                                for( int d=0; d<9; d++ )
+                                    sudoku.PossibilitiesGrid[r][c][d] = true;
+                        sudoku.UpdatePossGrid();
 
-                        std::cout<<contraS1<<contraS2<<filledS1<<filledS2<<"\n";
                         if( contraS1 && contraS2 ){
                             sudoku.setStatus(4); 	// contradictory
                             return;
@@ -320,21 +363,35 @@ void Solve(Sudoku9x9Irregular &sudoku){
                             for( int c=0; c<9; c++)
                                 temp_CurrentGrid[r][c] = sudoku.CurrentGrid[r][c];
 
-                        // first option
+                        // first option: trying to solve and save info(is contradictory or filled)
                         sudoku.CurrentGrid[r1][c] = d+1;
                         TryToSolve(sudoku);
                         bool contraS1 = IsContradictory(sudoku), filledS1 = IsFilled(sudoku);
+
+                        // reseting sudoku to the state before first option
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 sudoku.CurrentGrid[r][c] = temp_CurrentGrid[r][c];
+                        for( int r=0;r<9; r++ )
+                            for( int c=0; c<9; c++)
+                                for( int d=0; d<9; d++ )
+                                    sudoku.PossibilitiesGrid[r][c][d] = true;
+                        sudoku.UpdatePossGrid();
 
-                        // second option
+                        // second option: trying to solve and save info(is contradictory or filled)
                         sudoku.CurrentGrid[r2][c] = d+1;
                         TryToSolve(sudoku);
                         bool contraS2 = IsContradictory(sudoku), filledS2 = IsFilled(sudoku);
+
+                        // reseting sudoku to the state before first option
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 sudoku.CurrentGrid[r][c] = temp_CurrentGrid[r][c];
+                        for( int r=0;r<9; r++ )
+                            for( int c=0; c<9; c++)
+                                for( int d=0; d<9; d++ )
+                                    sudoku.PossibilitiesGrid[r][c][d] = true;
+                        sudoku.UpdatePossGrid();
 
                         if( contraS1 && contraS2 ){
                             sudoku.setStatus(4); 	// contradictory
@@ -373,9 +430,45 @@ void Solve(Sudoku9x9Irregular &sudoku){
 
     }
 
-    std::cout<<"Solve nie dalo rady...\n";
     sudoku.setStatus(2); 		// unsolvable
     sudoku.setDifficulty(0);	// unknown
+}
+
+void Sudoku9x9Irregular::InsertRandomDigit(){
+    /* Function inserts random digit at a random place in the grid (if it's possible).
+    Function returns true if random digit was succesfully inserted & false otherwise. */
+
+    UpdatePossGrid();
+
+    int r=10, c=10, iter=0, max_iter=100, max_iter2=100;
+    for( int i=0;i<max_iter2; i++ ){
+        do{
+            r = rand()%9;
+            c = rand()%9;
+            iter++;
+        } while ( N_Possibilities(r,c) <= 1 && iter < max_iter );
+
+        if( iter >= max_iter ) return;
+
+        int digits[] = {0,1,2,3,4,5,6,7,8};
+        std::random_shuffle(digits,digits+9);
+
+        for(int d=0; d<9; d++){
+            if( PossibilitiesGrid[r][c][digits[d]] == true ){
+                
+                CurrentGrid[r][c] = digits[d]+1;
+                Solve(*this);
+                
+                if( this->getStatus() != 4 ){
+                    this->ResetCurrentGrid();
+                    GivenGrid[r][c] = digits[d]+1;
+                    CurrentGrid[r][c] = digits[d]+1;
+                    return;
+                }
+                this->ResetCurrentGrid();
+            }
+        }
+    }
 }
 
 Sudoku9x9Irregular Generate_Irregular(int seed){
@@ -387,7 +480,9 @@ Sudoku9x9Irregular Generate_Irregular(int seed){
     srand(seed);
 
     int status, iter = 0, iter2 = 0, max_iter = 20, max_iter2 = 100;
+    // max_iter2 times we are trying from the beginning
     while( iter2 <= max_iter2 ){
+        // clearing the grids
         for (int i = 0; i < 9; i++)
             for (int j = 0; j < 9; j++) {
                 sudoku.GivenGrid[i][j] = 0;
@@ -398,12 +493,15 @@ Sudoku9x9Irregular Generate_Irregular(int seed){
                 for (int k = 0; k < 9; k++)
                     sudoku.PossibilitiesGrid[i][j][k] = true;
         
+        // creating regions
         (*sudoku.GoR).CreateRegions(seed);
-        int startingDigits = 3;
 
+        // inserting starting digits
+        int startingDigits = 1;
         for(int i=0; i<startingDigits; i++) sudoku.InsertRandomDigit();
-        std::cout<<"Wygenerowano nowy grid\n";
+
         iter = 0;
+        // trying to insert random digit max_iter times
         while( iter <= max_iter ){
             int temp_Grid[9][9];
             for( int r=0;r<9; r++ )
@@ -411,19 +509,39 @@ Sudoku9x9Irregular Generate_Irregular(int seed){
                     temp_Grid[r][c] = sudoku.GivenGrid[r][c];
 
             sudoku.InsertRandomDigit();
-            std::cout<<"Added digit\n";
+            int R,C,D; // coordinates of inserted digit
+            for( int cell=0; cell<81; cell++ )
+                if( temp_Grid[cell/9][cell%9] != sudoku.GivenGrid[cell/9][cell%9] ){
+                    R = cell/9;
+                    C = cell%9;
+                    D = sudoku.GivenGrid[cell/9][cell%9];
+                    break;
+                }
 
-            Solve(sudoku);
-            status = sudoku.getStatus();
-            //sudoku.PrintToConsole();
-            //cout<<"------------------"<<status<<"\n";
-            if ( status == 1 ){
-                return sudoku;
-            } else if(  status == 4 ){
-                for( int r=0;r<9; r++ )
-                    for( int c=0; c<9; c++)
-                        sudoku.GivenGrid[r][c] = temp_Grid[r][c];
+            // trying to fit any of possible digits in R,C cell
+            int current_D=D;
+            while( current_D != (D+7)%9+1 ){
+                sudoku.GivenGrid[R][C] = current_D;
+                sudoku.CurrentGrid[R][C] = current_D;
+                sudoku.UpdatePossGrid();
+                Solve(sudoku);
+                status = sudoku.getStatus();
+                //sudoku.PrintToConsole();
+                //cout<<"------------------"<<status<<"\n";
+                if ( status == 1 ){
+                    sudoku.ResetCurrentGrid();
+                    return sudoku;
+                } else if(  status != 4 ){
+                    break;
+                }
+                
+                current_D = current_D%9 +1;
+                std::cout<<R<<" "<<C<<" "<<current_D<<" "<<status<<"\n";
                 sudoku.ResetCurrentGrid();
+            }
+            // if none of digits fit, return to the temp_Grid
+            if( status == 4 ){
+                break;
             }
 
             iter++;

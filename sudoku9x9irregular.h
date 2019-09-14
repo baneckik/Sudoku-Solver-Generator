@@ -15,7 +15,11 @@ class Sudoku9x9Irregular : public Sudoku9x9 {
 
         void operator=(Sudoku9x9Irregular &sudoku);
 
+        bool IsDigitOnlyInOneColumn(int reg, int d, int c);
+        bool IsDigitOnlyInOneRow(int reg, int d, int r);
+
         void UpdatePossGrid();
+        void InsertRandomDigit();
 
         void PrintToConsole();
 };
@@ -59,64 +63,30 @@ void Sudoku9x9Irregular::operator=(Sudoku9x9Irregular &sudoku){
     setDifficulty(sudoku.getDifficulty());
     setSeed(sudoku.getSeed());
 
-    GoR = sudoku.GoR;   
+    delete GoR;
+    GoR = new GridOfRegions(9,9,9);
+    for( int reg=0; reg<9; reg++ ){
+        GoR->Regions[reg] = sudoku.GoR->Regions[reg];
+    }
+    
 }
 
-
-
-void Sudoku9x9Irregular::PrintToConsole(){
-    int Width = (*GoR).getGridWidth();
-    int Hight = (*GoR).getGridHight();
-
-    for (int r = 0; r < Hight; r++) {
-        for (int c = 0; c < Width; c++) {
-
-            if ( CurrentGrid[r][c] == 0 )
-                std::cout << "\033[1;31m";
-            else if( CurrentGrid[r][c] == GivenGrid[r][c])
-                 std::cout << "\033[1;37m";
-            else
-                std::cout << "\033[1;32m";
-
-            std::cout << CurrentGrid[r][c];
+bool Sudoku9x9Irregular::IsDigitOnlyInOneColumn(int reg, int d, int c){
+    for( int cell=0; cell<81; cell++ ){
+        if( cell%9 != c && (*GoR).Regions[reg].Grid[cell] && PossibilitiesGrid[cell/9][cell%9][d] ){
+            return false;
         }
-
-        std::cout<<" ";
-
-        for( int c=0; c<Width; c++ ){
-            if( (*GoR).Grid[r*Width+c] == -1 ){
-                std::cout <<"\033[0m";
-                std::cout<<"-";
-            }
-            else{
-                int d = (*GoR).Grid[r*Width+c];
-                if( d == 0 )
-                    std::cout << "\033[1;30m";
-                else if( d == 1 )
-                    std::cout << "\033[1;31m";
-                else if( d == 2 )
-                    std::cout << "\033[1;32m";
-                else if( d == 3 )
-                    std::cout << "\033[1;33m";
-                else if( d == 4 )
-                    std::cout << "\033[1;34m";
-                else if( d == 5 )
-                    std::cout << "\033[1;35m";
-                else if( d == 6 )
-                    std::cout << "\033[1;36m";
-                else if( d == 7 )
-                    std::cout << "\033[1;37m";
-                else if( d == 8 )
-                    std::cout << "\033[0m";
-                
-                
-                std::cout<<d<<" ";
-            }
-        }
-        std::cout << std::endl;
     }
-    std::cout<<"\033[0m"<<"\n";
-    return;
+    return true;
+}
+
+bool Sudoku9x9Irregular::IsDigitOnlyInOneRow(int reg, int d, int r){
+    for( int cell=0; cell<81; cell++ ){
+        if( cell/9 != r && (*GoR).Regions[reg].Grid[cell] && PossibilitiesGrid[cell/9][cell%9][d] ){
+            return false;
+        }
+    }
+    return true;
 }
 
 void Sudoku9x9Irregular::UpdatePossGrid(){
@@ -147,4 +117,83 @@ void Sudoku9x9Irregular::UpdatePossGrid(){
             }
         }
     }
+    // trick nr 1
+    for( int reg=0; reg<9; reg++ ){
+        for( int d=0; d<9; d++ ){
+            // horizontally
+            for( int r=0; r<9; r++ ){
+                if( IsDigitOnlyInOneRow(reg,d,r) ){
+                    for( int c=0; c<9 ; c++ ){
+                        if( (*GoR).Grid[r*9+c] != reg ){
+                            PossibilitiesGrid[r][c][d] = false;
+                        }
+                    }
+                }
+            }
+            // vertically
+            for( int c=0; c<9; c++ ){
+                if( IsDigitOnlyInOneColumn(reg,d,c) ){
+                    for( int r=0; r<9 ; r++ ){
+                        if( (*GoR).Grid[r*9+c] != reg ){
+                            PossibilitiesGrid[r][c][d] = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
+void Sudoku9x9Irregular::PrintToConsole(){
+    int Width = (*GoR).getGridWidth();
+    int Hight = (*GoR).getGridHight();
+
+    for (int r = 0; r < Hight; r++) {
+        for (int c = 0; c < Width; c++) {
+
+            if ( CurrentGrid[r][c] == 0 )
+                std::cout << "\033[1;31m";
+            else if( CurrentGrid[r][c] == GivenGrid[r][c])
+                 std::cout << "\033[1;37m";
+            else
+                std::cout << "\033[1;32m";
+
+            std::cout << CurrentGrid[r][c] << " ";
+        }
+
+        std::cout<<" ";
+
+        for( int c=0; c<Width; c++ ){
+            if( (*GoR).Grid[r*Width+c] == -1 ){
+                std::cout <<"\033[0m";
+                std::cout<<"-";
+            }
+            else{
+                int d = (*GoR).Grid[r*Width+c];
+                if( d == 0 )
+                    std::cout << "\033[1;30m";
+                else if( d == 1 )
+                    std::cout << "\033[1;31m";
+                else if( d == 2 )
+                    std::cout << "\033[1;32m";
+                else if( d == 3 )
+                    std::cout << "\033[1;33m";
+                else if( d == 4 )
+                    std::cout << "\033[1;34m";
+                else if( d == 5 )
+                    std::cout << "\033[1;35m";
+                else if( d == 6 )
+                    std::cout << "\033[1;36m";
+                else if( d == 7 )
+                    std::cout << "\033[1;37m";
+                else if( d == 8 )
+                    std::cout << "\033[0m";
+                
+                std::cout<<d<<" ";
+            }
+        }
+        std::cout << std::endl;
+    }
+    std::cout<<"\033[0m"<<"\n";
+}
+

@@ -55,7 +55,6 @@ GridOfRegions::GridOfRegions(){
 
     Grid = new int[GridWidth*GridHight];
     for( int i=0; i<9*9; i++ ) Grid[i] = -1;
-    std::cout<<"wykonal sie konstruktor gridofregions\n";
 }
 
 GridOfRegions::GridOfRegions(int g_width, int g_hight, int n_regions)

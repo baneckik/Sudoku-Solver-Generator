@@ -41,6 +41,7 @@ class Sudoku9x9{
         void UpdatePossGrid_RowsCols();
         void UpdatePossGrid();
         void ResetCurrentGrid();
+        void InsertDigit(int r, int c, int d);
         bool InsertRandomDigit();
         void CreateFullGrid(int seed);
 
@@ -147,7 +148,7 @@ int Sudoku9x9::N_Current(){
 int Sudoku9x9::N_Possibilities(int r, int c){
     int sum = 0;
     for(int i=0; i<9; i++)
-        if(PossibilitiesGrid[r][c][i] != 0) sum++;
+        if( PossibilitiesGrid[r][c][i] ) sum++;
     return sum;
 }
 
@@ -189,9 +190,14 @@ void Sudoku9x9::PrintPossibilities(){
     for( int r=0; r<9; r++ )
         for( int c=0;c<9;c++ ){
             if( c%9 == 0 ) std::cout<<"\n";
-            std::cout<<N_Possibilities(r,c);
+            if( N_Possibilities(r,c) == 9 ) std::cout<<"\033[1;32m";
+            else if( N_Possibilities(r,c) == 1 ) std::cout<<"\033[1;37m";
+            else if( N_Possibilities(r,c) == 0 ) std::cout<<"\033[1;31m";
+            else std::cout<<"\033[1;33m";
+            
+            std::cout<<N_Possibilities(r,c)<<" ";
         }
-    std::cout<<"\n";
+    std::cout<<"\033[0m\n\n";
 }
 
 bool Sudoku9x9::IsFilled() {
@@ -862,10 +868,21 @@ void Sudoku9x9::UpdatePossGrid(){
 }
 
 void Sudoku9x9::ResetCurrentGrid(){
+    /* Function resets current Grid to its base given grid. */
     for (int i = 0; i < 9; i++)
         for (int j = 0; j < 9; j++) {
             CurrentGrid[i][j] = GivenGrid[i][j];
         }
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++) 
+            for ( int d=0; d<9; d++ ){
+                PossibilitiesGrid[i][j][d] = true;
+            }
+}
+
+void Sudoku9x9::InsertDigit(int r, int c, int d){
+    GivenGrid[r][c] = d;
+    CurrentGrid[r][c] = d;
 }
 
 bool Sudoku9x9::InsertRandomDigit(){
