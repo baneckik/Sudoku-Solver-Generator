@@ -536,7 +536,6 @@ void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
                 }
                 
                 current_D = current_D%9 +1;
-                std::cout<<R<<" "<<C<<" "<<current_D<<" "<<status<<"\n";
                 sudoku.ResetCurrentGrid();
             }
             // if none of digits fit, return to the temp_Grid
