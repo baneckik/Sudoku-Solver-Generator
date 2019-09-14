@@ -471,12 +471,11 @@ void Sudoku9x9Irregular::InsertRandomDigit(){
     }
 }
 
-Sudoku9x9Irregular Generate_Irregular(int seed){
+void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
     /* Function generates random irregular sudoku using Solve() function.
     The result sudoku theoretically may be contradictory.
     If so, function returns sudoku with an appropriate status. */
 
-    Sudoku9x9Irregular sudoku;
     srand(seed);
 
     int status, iter = 0, iter2 = 0, max_iter = 20, max_iter2 = 100;
@@ -530,7 +529,8 @@ Sudoku9x9Irregular Generate_Irregular(int seed){
                 //cout<<"------------------"<<status<<"\n";
                 if ( status == 1 ){
                     sudoku.ResetCurrentGrid();
-                    return sudoku;
+                    sudoku.setSeed(seed);
+                    return;
                 } else if(  status != 4 ){
                     break;
                 }
@@ -552,7 +552,7 @@ Sudoku9x9Irregular Generate_Irregular(int seed){
     std::cout<<"NIe wyszlo :( "<<sudoku.getStatus()<<"\n";
     // function should never reach this point
     sudoku.setSeed(123);
-    return sudoku;
+    return;
 }
 
 void RestrictDigits(Sudoku9x9Irregular &sudoku){
