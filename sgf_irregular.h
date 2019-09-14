@@ -549,7 +549,6 @@ void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
         iter2++;
     }
 
-    std::cout<<"NIe wyszlo :( "<<sudoku.getStatus()<<"\n";
     // function should never reach this point
     sudoku.setSeed(123);
     return;
