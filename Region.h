@@ -35,6 +35,9 @@ class Region{
 
 #endif
 
+#ifndef REGION_METHODS
+#define REGION_METHODS
+
 Region::Region(){
     GridWidth = 9;
     GridHight = 9;
@@ -175,3 +178,5 @@ bool Region::IsBoundary(int r, int c){
         return true;
     return false;
 }
+
+#endif  //REGION_METHODS

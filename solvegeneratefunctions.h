@@ -1,7 +1,8 @@
 #include <vector>
 #include "sudoku9x9irregular.h"
-using namespace std;
 
+#ifndef FUNCTIONS_SUDOKU9X9
+#define FUNCITONS_SUDOKU9X9
 
 bool IsContradictory(Sudoku9x9 &sudoku){
 
@@ -15,21 +16,21 @@ bool IsContradictory(Sudoku9x9 &sudoku){
             suma = 0;
         }
 
-    vector<int> quantities = {0,0,0,0,0,0,0,0,0};
+    std::vector<int> quantities = {0,0,0,0,0,0,0,0,0};
 
     // if there is at most one digit in each row
     // and if there is at least one possibilitie for every digit in each row
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++)
             if (sudoku.CurrentGrid[r][c] != 0) quantities[sudoku.CurrentGrid[r][c] - 1]++;
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
 
         for (int d=0; d<9; d++){
             for (int c = 0; c < 9; c++)
                 quantities[d] += sudoku.PossibilitiesGrid[r][c][d];
         }
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
 
     }
@@ -38,14 +39,14 @@ bool IsContradictory(Sudoku9x9 &sudoku){
     for (int c = 0; c < 9; c++) {
         for (int r = 0; r < 9; r++)
             if (sudoku.CurrentGrid[r][c] != 0) quantities[sudoku.CurrentGrid[r][c] - 1]++;
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
 
         for (int d=0; d<9; d++){
             for (int r = 0; r < 9; r++)
                 quantities[d] += sudoku.PossibilitiesGrid[r][c][d];
         }
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
     }
 
@@ -57,7 +58,7 @@ bool IsContradictory(Sudoku9x9 &sudoku){
                 for (int c = 0; c < 3; c++)
                     if (sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] != 0)
                         quantities[sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] - 1]++;
-                if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
+                if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
             }
             for (int i = 0; i < 9; i++) quantities[i] = 0;
 
@@ -65,7 +66,7 @@ bool IsContradictory(Sudoku9x9 &sudoku){
                 for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++)
                     quantities[d] += sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d];
             }
-            if ( any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
+            if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
             for (int i = 0; i < 9; i++) quantities[i] = 0;
         }
     }
@@ -74,12 +75,12 @@ bool IsContradictory(Sudoku9x9 &sudoku){
     if(sudoku.getType()==2){
         for (int c = 0; c < 9; c++)
             if (sudoku.CurrentGrid[c][c] != 0) quantities[sudoku.CurrentGrid[c][c] - 1]++;
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
 
         for (int c = 0; c < 9; c++)
             if (sudoku.CurrentGrid[8-c][c] != 0) quantities[sudoku.CurrentGrid[8-c][c] - 1]++;
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
     }
 
     // only for Non-Consecutive sudoku
@@ -1595,3 +1596,5 @@ void Rotate90(Sudoku9x9 &sudoku){
     }
     //sudoku.UpdatePossGrid();
 }
+
+#endif  //FUNCITONS_SUDOKU9X9

@@ -1,6 +1,8 @@
 #include <vector>
 #include "solvegeneratefunctions.h"
-using namespace std;
+
+#ifndef FUNCTIONS_IRREGULAR
+#define FUNCTIONS_IRREGULAR
 
 bool IsContradictory(Sudoku9x9Irregular &sudoku){
     // if there is a place in the grid with no possible digit
@@ -13,21 +15,21 @@ bool IsContradictory(Sudoku9x9Irregular &sudoku){
             suma = 0;
         }
 
-    vector<int> quantities = {0,0,0,0,0,0,0,0,0};
+    std::vector<int> quantities = {0,0,0,0,0,0,0,0,0};
     
     // if there is at most one digit in each row
     // and if there is at least one possibilitie for every digit in each row
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++)
             if (sudoku.CurrentGrid[r][c] != 0) quantities[sudoku.CurrentGrid[r][c] - 1]++;
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
 
         for (int d=0; d<9; d++){
             for (int c = 0; c < 9; c++)
                 quantities[d] += sudoku.PossibilitiesGrid[r][c][d];
         }
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
 
     }
@@ -37,14 +39,14 @@ bool IsContradictory(Sudoku9x9Irregular &sudoku){
     for (int c = 0; c < 9; c++) {
         for (int r = 0; r < 9; r++)
             if (sudoku.CurrentGrid[r][c] != 0) quantities[sudoku.CurrentGrid[r][c] - 1]++;
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
 
         for (int d=0; d<9; d++){
             for (int r = 0; r < 9; r++)
                 quantities[d] += sudoku.PossibilitiesGrid[r][c][d];
         }
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
     }
     
@@ -55,7 +57,7 @@ bool IsContradictory(Sudoku9x9Irregular &sudoku){
         for (int cell = 0; cell < 81; cell++) {
                 if ((*sudoku.GoR).Grid[cell]==reg && sudoku.CurrentGrid[cell/9][cell%9] != 0)
                     quantities[sudoku.CurrentGrid[cell/9][cell%9] - 1]++;
-            if ( any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) 
+            if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) 
                 return true;
         }
         for (int i = 0; i < 9; i++) quantities[i] = 0;
@@ -65,7 +67,7 @@ bool IsContradictory(Sudoku9x9Irregular &sudoku){
                 if ( (*sudoku.GoR).Grid[cell]==reg )
                     quantities[d] += sudoku.PossibilitiesGrid[cell/9][cell%9][d];
         }
-        if ( any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) 
+        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) 
             return true;
         for (int i = 0; i < 9; i++) quantities[i] = 0;
     }
@@ -610,3 +612,5 @@ void AddDigits(Sudoku9x9Irregular &sudoku, int I){
     }
     sudoku.ResetCurrentGrid();
 }
+
+#endif  //FUNCTIONS_IRREGULAR

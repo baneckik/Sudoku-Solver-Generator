@@ -24,7 +24,10 @@ class Sudoku9x9Irregular : public Sudoku9x9 {
         void PrintToConsole();
 };
 
-#endif
+#endif  //SUDOKU9x9IRREGULAR
+
+#ifndef SUDOKU9X9_IRREGULAR_METHODS
+#define SUDOKU9X9_IRREGULAR_METHODS
 
 Sudoku9x9Irregular::Sudoku9x9Irregular(){
     for (int i = 0; i < 9; i++)
@@ -197,3 +200,4 @@ void Sudoku9x9Irregular::PrintToConsole(){
     std::cout<<"\033[0m"<<"\n";
 }
 
+#endif  //SUDOKU9X9_IRREGULAR_METHODS
