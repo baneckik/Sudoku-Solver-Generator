@@ -279,7 +279,7 @@ void GridOfRegions::CreateRegions(int seed){
 
                     if( Regions[reg].RegionSize() == DestinationSize ) break;
                     // for every region we choose the cell "Cell" to grow region from
-                    int progress = false;
+                    bool progress = false;
                     
                     int Cell = rand()%Regions[reg].RegionSize(); // first candidate for grow cell
                     int Cell1 = -1, iter4=0;

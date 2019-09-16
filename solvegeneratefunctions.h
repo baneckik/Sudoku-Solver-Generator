@@ -2,7 +2,7 @@
 #include "sudoku9x9irregular.h"
 
 #ifndef FUNCTIONS_SUDOKU9X9
-#define FUNCITONS_SUDOKU9X9
+#define FUNCTIONS_SUDOKU9X9
 
 bool IsContradictory(Sudoku9x9 &sudoku){
 
@@ -175,7 +175,7 @@ void UpdatePossGrid_RowsCols(Sudoku9x9 &sudoku, bool &progress){
 
 void UpdatePossGrid_Regions(Sudoku9x9 &sudoku, bool &progress){
     // basic actualization of PossibilitiesGrid in regions of digit from 1 to 9
-    // in any sudoku besides irregolar regions means boxes.
+    // in any sudoku besides irregular regions means boxes.
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             if (sudoku.CurrentGrid[r][c] != 0) {
@@ -1052,7 +1052,7 @@ Sudoku9x9 TryToSolveEasy(Sudoku9x9 sudoku){
 
         // actualization of PossibilitiesGrid
         UpdatePossGrid_RowsCols(sudoku, progress);
-        UpdatePossGrid_Regions(sudoku, progress);
+        UpdatePossGrid_Regions(sudoku, progress); // it means boxes
 
         // only for Diagonal sudoku
         if( sudoku.getType() == 2 ){

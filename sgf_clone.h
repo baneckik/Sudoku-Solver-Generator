@@ -1,10 +1,11 @@
 #include <vector>
 #include "solvegeneratefunctions.h"
+#include "sudoku9x9clone.h"
 
-#ifndef FUNCTIONS_IRREGULAR
-#define FUNCTIONS_IRREGULAR
+#ifndef FUNCTIONS_CLONE
+#define FUNCTIONS_CLONE
 
-bool IsContradictory(Sudoku9x9Irregular &sudoku){
+bool IsContradictory(Sudoku9x9Clone &sudoku){
     // if there is a place in the grid with no possible digit
     int suma = 0;
     for (int r = 0; r < 9; r++)
@@ -50,55 +51,56 @@ bool IsContradictory(Sudoku9x9Irregular &sudoku){
         for (int i = 0; i < 9; i++) quantities[i] = 0;
     }
     
-    if( !(*sudoku.GoR).IsFilled() ) return false;
-    // if there is at most one digit in each region
-    // and if there is at least one possibilitie for every digit in each region
-    for( int reg=0; reg<(*sudoku.GoR).getNumberOfRegions(); reg++){
-        for (int cell = 0; cell < 81; cell++) {
-                if ((*sudoku.GoR).Grid[cell]==reg && sudoku.CurrentGrid[cell/9][cell%9] != 0)
-                    quantities[sudoku.CurrentGrid[cell/9][cell%9] - 1]++;
-            if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) 
-                return true;
-        }
-        for (int i = 0; i < 9; i++) quantities[i] = 0;
+    // if there is at most one digit in each box
+    // and if there is at least one possibilitie for every digit in each box
+    for( int boxr=0; boxr<3; boxr++){
+        for( int boxc=0; boxc<3; boxc++){
+            for (int r = 0; r < 3; r++) {
+                for (int c = 0; c < 3; c++)
+                    if (sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] != 0)
+                        quantities[sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] - 1]++;
+                if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i>1;}) ) return true;
+            }
+            for (int i = 0; i < 9; i++) quantities[i] = 0;
 
-        for (int d=0; d<9; d++){
-            for (int cell = 0; cell < 81; cell++) 
-                if ( (*sudoku.GoR).Grid[cell]==reg )
-                    quantities[d] += sudoku.PossibilitiesGrid[cell/9][cell%9][d];
+            for (int d=0; d<9; d++){
+                for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++)
+                    quantities[d] += sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d];
+            }
+            if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) return true;
+            for (int i = 0; i < 9; i++) quantities[i] = 0;
         }
-        if ( std::any_of(quantities.begin(), quantities.end(), [](int i){return i==0;}) ) 
-            return true;
-        for (int i = 0; i < 9; i++) quantities[i] = 0;
     }
     
+    if( !sudoku.IsRegShiftedInGrid() ) return true;
+    // if there are same digits on corresponding cells in shifted regions
+    for( int cell=0; cell<81; cell++ ){
+        if( sudoku.reg.Grid[cell] && sudoku.CurrentGrid[cell/9][cell%9]!=0 && 
+        sudoku.CurrentGrid[cell/9][cell%9]!=sudoku.CurrentGrid[cell/9+sudoku.getShiftR()][cell%9+sudoku.getShiftC()]){
+            return true;
+        }
+    }
+
+
     return false;
 }
 
-void UpdatePossGrid_Regions(Sudoku9x9Irregular &sudoku, bool &progress){
-    // basic actualization of PossibilitiesGrid in irregular regions of digit from 1 to 9
-    if( !sudoku.GoR->IsEquallyDivided() ) return;
-
-    for (int r = 0; r < 9; r++) {
-        for (int c = 0; c < 9; c++) {
-            if (sudoku.CurrentGrid[r][c] != 0) {
-                int D = sudoku.CurrentGrid[r][c];
-                int reg = sudoku.GoR->Grid[r*9+c];
-                // eliminating possibilities in the region
-                for( int Cell=0; Cell<81; Cell++ ){
-                    if ( (*sudoku.GoR).Grid[Cell] == reg && Cell != r*9+c ) {
-                        if (sudoku.PossibilitiesGrid[Cell/9][Cell%9][D-1] == true) {
-                            progress = true;
-                            sudoku.PossibilitiesGrid[Cell/9][Cell%9][D-1] = false;
-                        }
-                    }
+void UpdatePossGrid_Clones(Sudoku9x9Clone &sudoku, bool &progress){
+    // basic actualization of PossibilitiesGrid in cloned regions
+    for( int cell=0; cell<81; cell++ ){
+        if( sudoku.reg.Grid[cell] ){
+            for( int d=0; d<9; d++ ){
+                if( sudoku.PossibilitiesGrid[cell/9][cell%9][d]!=sudoku.PossibilitiesGrid[cell/9+sudoku.getShiftR()][cell%9+sudoku.getShiftC()][d]){
+                    progress = true;
+                    sudoku.PossibilitiesGrid[cell/9][cell%9][d] = false;
+                    sudoku.PossibilitiesGrid[cell/9+sudoku.getShiftR()][cell%9+sudoku.getShiftC()][d] = false;
                 }
             }
         }
     }
 }
 
-void UpdateCurrentGrid(Sudoku9x9Irregular &sudoku, bool &progress){
+void UpdateCurrentGrid(Sudoku9x9Clone &sudoku, bool &progress){
     // actualization of the CurrentGrid
     // for every digit checking if there is only one possibilitie
     // in a certain place, row, column or box
@@ -146,26 +148,29 @@ void UpdateCurrentGrid(Sudoku9x9Irregular &sudoku, bool &progress){
             }
         }
         // checking if there is only one possibilitie in a box
-        for(int reg=0; reg<(*sudoku.GoR).getNumberOfRegions(); reg++){
-            int sum = 0;
-            for( int cell=0; cell<81; cell++ ) 
-                if( (*sudoku.GoR).Grid[cell] == reg )
-                    sum += sudoku.PossibilitiesGrid[cell/9][cell%9][d];
-            if( sum == 1 ){
-                for( int cell=0; cell<81; cell++ )
-                    if( (*sudoku.GoR).Grid[cell] == reg && sudoku.PossibilitiesGrid[cell/9][cell%9][d] == true ){
-                        if( sudoku.CurrentGrid[cell/9][cell%9] == 0 ){
-                            progress = true;
-                            sudoku.CurrentGrid[cell/9][cell%9] = d+1;
-                        }
-                        break;
-                    }
+        for(int boxr=0; boxr<3; boxr++){
+            for(int boxc=0; boxc<3; boxc++){
+                int sum = 0;
+                for(int r=0; r<3; r++)
+                    for(int c=0; c<3; c++)
+                        sum += sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d];
+                if( sum == 1 ){
+                    for(int r=0; r<3; r++)
+                        for(int c=0; c<3; c++)
+                            if( sudoku.PossibilitiesGrid[boxr*3 + r][boxc*3 + c][d] == true ){
+                                if( sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] == 0 ){
+                                    progress = true;
+                                    sudoku.CurrentGrid[boxr*3 + r][boxc*3 + c] = d+1;
+                                }
+                                break;
+                            }
+                }
             }
         }
     }
 }
 
-void TryToSolve(Sudoku9x9Irregular &sudoku){
+void TryToSolveEasy(Sudoku9x9Clone &sudoku){
     /* Function tries to solve sudoku using only hidden singles
     and rows/cols/boxes where certain digit can fit into only one place. */
     
@@ -179,54 +184,226 @@ void TryToSolve(Sudoku9x9Irregular &sudoku){
         progress = false;
 
         // actualization of PossibilitiesGrid
-        UpdatePossGrid_RowsCols(sudoku, progress);
-        UpdatePossGrid_Regions(sudoku, progress);
-        
-        // trick nr 1
-        for( int reg=0; reg<9; reg++ ){
-            for( int d=0; d<9; d++ ){
-                // horizontally
-                for( int r=0; r<9; r++ ){
-                    if( sudoku.IsDigitOnlyInOneRow(reg,d,r) ){
-                        for( int c=0; c<9 ; c++ ){
-                            if( (*sudoku.GoR).Grid[r*9+c] != reg ){
-                                if( sudoku.PossibilitiesGrid[r][c][d] ){
-                                    sudoku.PossibilitiesGrid[r][c][d] = false;
-                                    progress = true;
-                                }
-                            }
-                        }
-                    }
-                }
-                // vertically
-                for( int c=0; c<9; c++ ){
-                    if( sudoku.IsDigitOnlyInOneColumn(reg,d,c) ){
-                        for( int r=0; r<9 ; r++ ){
-                            if( (*sudoku.GoR).Grid[r*9+c] != reg ){
-                                if( sudoku.PossibilitiesGrid[r][c][d] ){
-                                    sudoku.PossibilitiesGrid[r][c][d] = false;
-                                    progress = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
+        UpdatePossGrid_Classic(sudoku, progress);
+        UpdatePossGrid_Clones(sudoku, progress);
 
         // actualization of CurrentGrid
         UpdateCurrentGrid(sudoku, progress);
-        
     }
 }
 
-void Solve(Sudoku9x9Irregular &sudoku){
+void TryToSolve(Sudoku9x9Clone &sudoku){
+    /* Function tries to solve sudoku using TryToSolveEasy()
+    and restricting certain rows/cols techniques. */
+    
+    if( IsContradictory(sudoku) ){
+        sudoku.setStatus(4); // contradictory
+        return;
+    }
+
+    bool progress = true;
+    while(progress){
+        progress = false;
+
+        // actualization of PossibilitiesGrid
+        UpdatePossGrid_Classic(sudoku, progress);
+        UpdatePossGrid_Clones(sudoku, progress);
+        
+        // Basic elimination technique nr 1
+        // When in certain box digit can fit only into cells in one row/col, then the possibilities
+        // from the rest of this row/col for this digit can be eliminated. 
+        // ( not for irregular sudoku )
+        int type = sudoku.getType();
+
+        if( type==1 || type==2 || type==3 || type==4 || type==6 ){
+            // horizontally
+            for (int d = 0; d < 9; d++) for (int boxr = 0; boxr < 3; boxr++) {
+                //1
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr, 0, 3*boxr + 1, 2) == 0)
+                    for (int c = 3; c<9; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr + 2][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr + 2][c][d] = false;
+                        }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr + 1, 0, 3*boxr + 2, 2) == 0)
+                    for (int c = 3; c<9; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr][c][d] = false;
+                        }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr, 0, 3*boxr, 2)
+                    + TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr+2, 0, 3*boxr+2, 2) == 0)
+                    for (int c = 3; c<9; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr+1][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr+1][c][d] = false;
+                        }
+                //2
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr, 3, 3*boxr + 1, 5) == 0){
+                    for (int c = 0; c<3; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr + 2][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr + 2][c][d] = false;
+                        }
+                    for (int c = 6; c<9; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr + 2][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr + 2][c][d] = false;
+                        }
+                }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr + 1, 3, 3*boxr + 2, 5) == 0){
+                    for (int c = 0; c<3; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr][c][d] = false;
+                        }
+                    for (int c = 6; c<9; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr][c][d] = false;
+                        }
+                }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr, 3, 3*boxr, 5)
+                    + TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr+2, 3, 3*boxr+2, 5) == 0){
+                    for (int c = 0; c<3; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr+1][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr+1][c][d] = false;
+                        }
+                    for (int c = 6; c<9; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr+1][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr+1][c][d] = false;
+                        }
+                }
+                //3
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr, 6, 3*boxr + 1, 8) == 0)
+                    for (int c = 0; c<6; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr + 2][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr + 2][c][d] = false;
+                        }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr + 1, 6, 3*boxr + 2, 8) == 0)
+                    for (int c = 0; c<6; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr][c][d] = false;
+                        }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr, 6, 3*boxr, 8)
+                    + TotalPoss(sudoku.PossibilitiesGrid, d, 3*boxr+2, 6, 3*boxr+2, 8) == 0)
+                    for (int c = 0; c<6; c++)
+                        if (sudoku.PossibilitiesGrid[3*boxr+1][c][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[3*boxr+1][c][d] = false;
+                        }
+
+            }
+            // vertically
+            for (int d = 0; d < 9; d++) for (int boxc = 0; boxc < 3; boxc++) {
+                //1
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 0, 3*boxc, 2, 3*boxc + 1) == 0)
+                    for (int r = 3; r<9; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc+2][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc+2][d] = false;
+                        }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 0, 3*boxc+1, 2, 3*boxc+2) == 0)
+                    for (int r = 3; r<9; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc][d] = false;
+                        }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 0, 3*boxc, 2, 3*boxc)
+                    + TotalPoss(sudoku.PossibilitiesGrid, d, 0, 3*boxc+2, 2, 3*boxc+2) == 0)
+                    for (int r = 3; r<9; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc+1][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc+1][d] = false;
+                        }
+                //2
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3, 3*boxc, 5, 3*boxc+1) == 0){
+                    for (int r = 0; r<3; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc+2][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc+2][d] = false;
+                        }
+                    for (int r = 6; r<9; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc+2][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc+2][d] = false;
+                        }
+                }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3, 3*boxc+1, 5, 3*boxc+2) == 0){
+                    for (int r = 0; r<3; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc][d] = false;
+                        }
+                    for (int r = 6; r<9; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc][d] = false;
+                        }
+                }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 3, 3*boxc, 5, 3*boxc)
+                    + TotalPoss(sudoku.PossibilitiesGrid, d, 3, 3*boxc+2, 5, 3*boxc+2) == 0){
+                    for (int r = 0; r<3; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc+1][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc+1][d] = false;
+                        }
+                    for (int r = 6; r<9; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc+1][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc+1][d] = false;
+                        }
+                }
+                //3
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 6, 3*boxc, 8, 3*boxc+1) == 0)
+                    for (int r = 0; r<6; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc+2][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc+2][d] = false;
+                        }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 6, 3*boxc+1, 8, 3*boxc+2) == 0)
+                    for (int r = 0; r<6; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc][d] = false;
+                        }
+                if (TotalPoss(sudoku.PossibilitiesGrid, d, 6, 3*boxc, 8, 3*boxc)
+                    + TotalPoss(sudoku.PossibilitiesGrid, d, 6, 3*boxc+2, 8, 3*boxc+2) == 0)
+                    for (int r = 0; r<6; r++)
+                        if (sudoku.PossibilitiesGrid[r][3*boxc+1][d] == true) {
+                            progress = true;
+                            sudoku.PossibilitiesGrid[r][3*boxc+1][d] = false;
+                        }
+
+            }
+        }
+
+        // actualization of CurrentGrid
+        UpdateCurrentGrid(sudoku, progress);
+    }
+}
+
+void Solve(Sudoku9x9Clone &sudoku){
     /* Main solving function.
     Solves sudoku, estimates difficulty and gives appropriate status. */
 
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); // contradictory
+        return;
+    }
+
+    TryToSolveEasy(sudoku);
+    if( IsContradictory(sudoku) ){
+        sudoku.setStatus(4); 		// contradictory
+        return;
+    }
+    if( IsFilled(sudoku) ){
+        sudoku.setStatus(1); 		// solved
+        sudoku.setDifficulty(1); 	// Very Easy
         return;
     }
 
@@ -237,12 +414,12 @@ void Solve(Sudoku9x9Irregular &sudoku){
     }
     if( IsFilled(sudoku) ){
         sudoku.setStatus(1); 		// solved
-        sudoku.setDifficulty(1); 	// Easy
+        sudoku.setDifficulty(2); 	// Easy
         return;
     }
 
     bool progress = true;
-    int DifficultyLevel = 1;
+    int DifficultyLevel = 2;
 
     while(progress){
         progress = false;
@@ -436,7 +613,7 @@ void Solve(Sudoku9x9Irregular &sudoku){
     sudoku.setDifficulty(0);	// unknown
 }
 
-void Sudoku9x9Irregular::InsertRandomDigit(){
+void Sudoku9x9Clone::InsertRandomDigit(){
     /* Function inserts random digit at a random place in the grid (if it's possible).
     Function returns true if random digit was succesfully inserted & false otherwise. */
 
@@ -473,8 +650,8 @@ void Sudoku9x9Irregular::InsertRandomDigit(){
     }
 }
 
-void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
-    /* Function generates random irregular sudoku using Solve() function.
+void Generate_Clone(Sudoku9x9Clone &sudoku, int seed){
+    /* Function generates random clone sudoku using Solve() function.
     The result sudoku theoretically may be contradictory.
     If so, function returns sudoku with an appropriate status. */
 
@@ -483,6 +660,8 @@ void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
     int status, iter = 0, iter2 = 0, max_iter = 40, max_iter2 = 100;
     // max_iter2 times we are trying from the beginning
     while( iter2 <= max_iter2 ){
+        sudoku.PrintToConsole();
+        std::cout<<sudoku.getStatus()<<"\n";
         // clearing the grids
         for (int i = 0; i < 9; i++)
             for (int j = 0; j < 9; j++) {
@@ -494,8 +673,8 @@ void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
                 for (int k = 0; k < 9; k++)
                     sudoku.PossibilitiesGrid[i][j][k] = true;
         
-        // creating regions
-        (*sudoku.GoR).CreateRegions(seed);
+        // creating clones
+        sudoku.CreateRegion(seed+iter2);
 
         // inserting starting digits
         int startingDigits = 1;
@@ -524,11 +703,9 @@ void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
             while( current_D != (D+7)%9+1 ){
                 sudoku.GivenGrid[R][C] = current_D;
                 sudoku.CurrentGrid[R][C] = current_D;
-                sudoku.UpdatePossGrid();
                 Solve(sudoku);
                 status = sudoku.getStatus();
-                //sudoku.PrintToConsole();
-                //cout<<"------------------"<<status<<"\n";
+
                 if ( status == 1 ){
                     sudoku.ResetCurrentGrid();
                     sudoku.setSeed(seed);
@@ -552,10 +729,9 @@ void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
 
     // function should never reach this point
     sudoku.setSeed(123);
-    return;
 }
 
-void RestrictDigits(Sudoku9x9Irregular &sudoku){
+void RestrictDigits(Sudoku9x9Clone &sudoku){
     int rows[] = {0,1,2,3,4,5,6,7,8};
     int cols[] = {0,1,2,3,4,5,6,7,8};
     std::random_shuffle(rows,rows+9);
@@ -586,7 +762,7 @@ void RestrictDigits(Sudoku9x9Irregular &sudoku){
     }
 }
 
-void AddDigits(Sudoku9x9Irregular &sudoku, int I){
+void AddDigits(Sudoku9x9Clone &sudoku, int I){
     /* Function adds to sudoku a random digit from its solution.
     So, at least in theory, it makes sudoku easier. */
 
@@ -612,4 +788,4 @@ void AddDigits(Sudoku9x9Irregular &sudoku, int I){
     sudoku.ResetCurrentGrid();
 }
 
-#endif  //FUNCTIONS_IRREGULAR
+#endif  //FUNCTIONS_CLONE
