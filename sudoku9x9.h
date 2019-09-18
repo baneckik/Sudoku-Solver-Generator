@@ -41,6 +41,7 @@ class Sudoku9x9{
         void UpdatePossGrid_RowsCols();
         void UpdatePossGrid();
         void ResetCurrentGrid();
+        void ResetAllGrids();
         void InsertDigit(int r, int c, int d);
         bool InsertRandomDigit();
         void CreateFullGrid(int seed);
@@ -861,6 +862,23 @@ void Sudoku9x9::ResetCurrentGrid(){
     for (int i = 0; i < 9; i++)
         for (int j = 0; j < 9; j++) {
             CurrentGrid[i][j] = GivenGrid[i][j];
+        }
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++) 
+            for ( int d=0; d<9; d++ ){
+                PossibilitiesGrid[i][j][d] = true;
+            }
+}
+
+void Sudoku9x9::ResetAllGrids(){
+    /* Function resets given & current Grids to zero and PossGrid to true. */
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++) {
+            GivenGrid[i][j] = 0;
+        }
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++) {
+            CurrentGrid[i][j] = 0;
         }
     for (int i = 0; i < 9; i++)
         for (int j = 0; j < 9; j++) 

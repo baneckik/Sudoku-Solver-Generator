@@ -660,8 +660,6 @@ void Generate_Clone(Sudoku9x9Clone &sudoku, int seed){
     int status, iter = 0, iter2 = 0, max_iter = 40, max_iter2 = 100;
     // max_iter2 times we are trying from the beginning
     while( iter2 <= max_iter2 ){
-        sudoku.PrintToConsole();
-        std::cout<<sudoku.getStatus()<<"\n";
         // clearing the grids
         for (int i = 0; i < 9; i++)
             for (int j = 0; j < 9; j++) {
@@ -728,6 +726,7 @@ void Generate_Clone(Sudoku9x9Clone &sudoku, int seed){
     }
 
     // function should never reach this point
+    sudoku.ResetAllGrids();
     sudoku.setSeed(123);
 }
 
