@@ -75,12 +75,13 @@ bool IsContradictory(Sudoku9x9Clone &sudoku){
     if( !sudoku.IsRegShiftedInGrid() ) return true;
     // if there are same digits on corresponding cells in shifted regions
     for( int cell=0; cell<81; cell++ ){
-        if( sudoku.reg.Grid[cell] && sudoku.CurrentGrid[cell/9][cell%9]!=0 && 
+        if( sudoku.reg.Grid[cell] && 
+        sudoku.CurrentGrid[cell/9][cell%9] != 0 &&
+        sudoku.CurrentGrid[cell/9+sudoku.getShiftR()][cell%9+sudoku.getShiftC()] != 0 &&
         sudoku.CurrentGrid[cell/9][cell%9]!=sudoku.CurrentGrid[cell/9+sudoku.getShiftR()][cell%9+sudoku.getShiftC()]){
             return true;
         }
     }
-
 
     return false;
 }
@@ -393,12 +394,14 @@ void Solve(Sudoku9x9Clone &sudoku){
 
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); // contradictory
+        std::cout<<"jest sprzecznosc juz na poczatku\n";
         return;
     }
 
     TryToSolveEasy(sudoku);
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); 		// contradictory
+        std::cout<<"jest sprzecznosc latwa\n";
         return;
     }
     if( IsFilled(sudoku) ){
@@ -410,6 +413,7 @@ void Solve(Sudoku9x9Clone &sudoku){
     TryToSolve(sudoku);
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); 		// contradictory
+        std::cout<<"jest sprzecznosc\n";
         return;
     }
     if( IsFilled(sudoku) ){
@@ -488,6 +492,7 @@ void Solve(Sudoku9x9Clone &sudoku){
 
                         if( contraS1 && contraS2 ){
                             sudoku.setStatus(4); 	// contradictory
+                            std::cout<<"jest sprzecznosc trudna\n";
                             return;
                         }
                         if( filledS1 && filledS2 && !contraS1 && !contraS2 ){
@@ -497,6 +502,7 @@ void Solve(Sudoku9x9Clone &sudoku){
                         if ( contraS1 ) {
                             sudoku.CurrentGrid[r][c2] = d+1;
                             if ( filledS2 ){
+                                TryToSolve(sudoku);
                                 sudoku.setStatus(1); 		// solved
                                 sudoku.setDifficulty(DifficultyLevel);
                                 return;
@@ -507,6 +513,7 @@ void Solve(Sudoku9x9Clone &sudoku){
                         if ( contraS2 ) {
                             sudoku.CurrentGrid[r][c1] = d+1;
                             if ( filledS1 ){
+                                TryToSolve(sudoku);
                                 sudoku.setStatus(1); 		// solved
                                 sudoku.setDifficulty(DifficultyLevel);
                                 return;
@@ -574,6 +581,7 @@ void Solve(Sudoku9x9Clone &sudoku){
 
                         if( contraS1 && contraS2 ){
                             sudoku.setStatus(4); 	// contradictory
+                            std::cout<<"jest sprzecznosc trudna\n";
                             return;
                         }
                         if( filledS1 && filledS2 && !contraS1 && !contraS2 ){
@@ -583,6 +591,7 @@ void Solve(Sudoku9x9Clone &sudoku){
                         if ( contraS1 ) {
                             sudoku.CurrentGrid[r2][c] = d+1;
                             if ( filledS2 ){
+                                TryToSolve(sudoku);
                                 sudoku.setStatus(1); 		// solved
                                 sudoku.setDifficulty(DifficultyLevel);
                                 return;
@@ -593,6 +602,7 @@ void Solve(Sudoku9x9Clone &sudoku){
                         if ( contraS2 ) {
                             sudoku.CurrentGrid[r1][c] = d+1;
                             if ( filledS1 ){
+                                TryToSolve(sudoku);
                                 sudoku.setStatus(1); 		// solved
                                 sudoku.setDifficulty(DifficultyLevel);
                                 return;
@@ -655,21 +665,17 @@ void Generate_Clone(Sudoku9x9Clone &sudoku, int seed){
     The result sudoku theoretically may be contradictory.
     If so, function returns sudoku with an appropriate status. */
 
+    sudoku.setStatus(0);
+    sudoku.setDifficulty(0);
+    sudoku.setSeed(seed);    
+
     srand(seed);
 
     int status, iter = 0, iter2 = 0, max_iter = 40, max_iter2 = 100;
     // max_iter2 times we are trying from the beginning
     while( iter2 <= max_iter2 ){
         // clearing the grids
-        for (int i = 0; i < 9; i++)
-            for (int j = 0; j < 9; j++) {
-                sudoku.GivenGrid[i][j] = 0;
-                sudoku.CurrentGrid[i][j] = 0;
-            }
-        for (int i = 0; i < 9; i++)
-            for (int j = 0; j < 9; j++)
-                for (int k = 0; k < 9; k++)
-                    sudoku.PossibilitiesGrid[i][j][k] = true;
+        sudoku.ResetAllGrids();
         
         // creating clones
         sudoku.CreateRegion(seed+iter2);
@@ -727,6 +733,8 @@ void Generate_Clone(Sudoku9x9Clone &sudoku, int seed){
 
     // function should never reach this point
     sudoku.ResetAllGrids();
+    sudoku.setStatus(0);
+    sudoku.setDifficulty(0);
     sudoku.setSeed(123);
 }
 
