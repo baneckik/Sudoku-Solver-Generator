@@ -394,14 +394,12 @@ void Solve(Sudoku9x9Clone &sudoku){
 
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); // contradictory
-        std::cout<<"jest sprzecznosc juz na poczatku\n";
         return;
     }
 
     TryToSolveEasy(sudoku);
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); 		// contradictory
-        std::cout<<"jest sprzecznosc latwa\n";
         return;
     }
     if( IsFilled(sudoku) ){
@@ -413,7 +411,6 @@ void Solve(Sudoku9x9Clone &sudoku){
     TryToSolve(sudoku);
     if( IsContradictory(sudoku) ){
         sudoku.setStatus(4); 		// contradictory
-        std::cout<<"jest sprzecznosc\n";
         return;
     }
     if( IsFilled(sudoku) ){
@@ -427,7 +424,6 @@ void Solve(Sudoku9x9Clone &sudoku){
 
     while(progress){
         progress = false;
-        std::cout<<"wchodze do glownej petli\n";
         // program is looking for rows/cols in which this digit can fit only into exactly 2 places
         if ( !IsFilled(sudoku) ) {
             DifficultyLevel++;
@@ -496,12 +492,10 @@ void Solve(Sudoku9x9Clone &sudoku){
 
                         if( contraS1 && contraS2 ){
                             sudoku.setStatus(4); 	// contradictory
-                            std::cout<<"jest sprzecznosc trudna\n";
                             return;
                         }
                         if( filledS1 && filledS2 && !contraS1 && !contraS2 ){
                             sudoku.setStatus(3);	// ambiguous
-                            std::cout<<r<<c1<<" "<<c2<<d<<"\n"<<"jest niejednoznacznosc\n";
                             return;
                         }
                         if ( contraS1 ) {
