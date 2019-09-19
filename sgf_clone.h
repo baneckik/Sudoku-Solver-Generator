@@ -427,7 +427,7 @@ void Solve(Sudoku9x9Clone &sudoku){
 
     while(progress){
         progress = false;
-
+        std::cout<<"wchodze do glownej petli\n";
         // program is looking for rows/cols in which this digit can fit only into exactly 2 places
         if ( !IsFilled(sudoku) ) {
             DifficultyLevel++;
@@ -458,6 +458,12 @@ void Solve(Sudoku9x9Clone &sudoku){
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 temp_CurrentGrid[r][c] = sudoku.CurrentGrid[r][c];
+                        bool temp_PossGrid[9][9][9];
+                        for( int r=0;r<9; r++ )
+                            for( int c=0; c<9; c++)
+                                for( int d=0; d<9; d++ )
+                                    temp_PossGrid[r][c][d] = sudoku.PossibilitiesGrid[r][c][d];
+                        
                         
 
                         // first option: trying to solve and save info(is contradictory or filled)
@@ -472,8 +478,7 @@ void Solve(Sudoku9x9Clone &sudoku){
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 for( int d=0; d<9; d++ )
-                                    sudoku.PossibilitiesGrid[r][c][d] = true;
-                        sudoku.UpdatePossGrid();
+                                    sudoku.PossibilitiesGrid[r][c][d] = temp_PossGrid[r][c][d];
 
                         // second option: trying to solve and save info(is contradictory or filled)
                         sudoku.CurrentGrid[r][c2] = d+1;
@@ -487,8 +492,7 @@ void Solve(Sudoku9x9Clone &sudoku){
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 for( int d=0; d<9; d++ )
-                                    sudoku.PossibilitiesGrid[r][c][d] = true;
-                        sudoku.UpdatePossGrid();
+                                    sudoku.PossibilitiesGrid[r][c][d] = temp_PossGrid[r][c][d];
 
                         if( contraS1 && contraS2 ){
                             sudoku.setStatus(4); 	// contradictory
@@ -497,12 +501,13 @@ void Solve(Sudoku9x9Clone &sudoku){
                         }
                         if( filledS1 && filledS2 && !contraS1 && !contraS2 ){
                             sudoku.setStatus(3);	// ambiguous
+                            std::cout<<r<<c1<<" "<<c2<<d<<"\n"<<"jest niejednoznacznosc\n";
                             return;
                         }
                         if ( contraS1 ) {
                             sudoku.CurrentGrid[r][c2] = d+1;
+                            TryToSolve(sudoku);
                             if ( filledS2 ){
-                                TryToSolve(sudoku);
                                 sudoku.setStatus(1); 		// solved
                                 sudoku.setDifficulty(DifficultyLevel);
                                 return;
@@ -512,8 +517,8 @@ void Solve(Sudoku9x9Clone &sudoku){
                         }
                         if ( contraS2 ) {
                             sudoku.CurrentGrid[r][c1] = d+1;
+                            TryToSolve(sudoku);
                             if ( filledS1 ){
-                                TryToSolve(sudoku);
                                 sudoku.setStatus(1); 		// solved
                                 sudoku.setDifficulty(DifficultyLevel);
                                 return;
@@ -548,6 +553,11 @@ void Solve(Sudoku9x9Clone &sudoku){
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 temp_CurrentGrid[r][c] = sudoku.CurrentGrid[r][c];
+                        bool temp_PossGrid[9][9][9];
+                        for( int r=0;r<9; r++ )
+                            for( int c=0; c<9; c++)
+                                for( int d=0; d<9; d++ )
+                                    temp_PossGrid[r][c][d] = sudoku.PossibilitiesGrid[r][c][d];
 
                         // first option: trying to solve and save info(is contradictory or filled)
                         sudoku.CurrentGrid[r1][c] = d+1;
@@ -561,8 +571,7 @@ void Solve(Sudoku9x9Clone &sudoku){
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 for( int d=0; d<9; d++ )
-                                    sudoku.PossibilitiesGrid[r][c][d] = true;
-                        sudoku.UpdatePossGrid();
+                                    sudoku.PossibilitiesGrid[r][c][d] = temp_PossGrid[r][c][d];
 
                         // second option: trying to solve and save info(is contradictory or filled)
                         sudoku.CurrentGrid[r2][c] = d+1;
@@ -576,8 +585,7 @@ void Solve(Sudoku9x9Clone &sudoku){
                         for( int r=0;r<9; r++ )
                             for( int c=0; c<9; c++)
                                 for( int d=0; d<9; d++ )
-                                    sudoku.PossibilitiesGrid[r][c][d] = true;
-                        sudoku.UpdatePossGrid();
+                                    sudoku.PossibilitiesGrid[r][c][d] = temp_PossGrid[r][c][d];
 
                         if( contraS1 && contraS2 ){
                             sudoku.setStatus(4); 	// contradictory
@@ -590,8 +598,8 @@ void Solve(Sudoku9x9Clone &sudoku){
                         }
                         if ( contraS1 ) {
                             sudoku.CurrentGrid[r2][c] = d+1;
+                            TryToSolve(sudoku);
                             if ( filledS2 ){
-                                TryToSolve(sudoku);
                                 sudoku.setStatus(1); 		// solved
                                 sudoku.setDifficulty(DifficultyLevel);
                                 return;
@@ -601,8 +609,8 @@ void Solve(Sudoku9x9Clone &sudoku){
                         }
                         if ( contraS2 ) {
                             sudoku.CurrentGrid[r1][c] = d+1;
+                            TryToSolve(sudoku);
                             if ( filledS1 ){
-                                TryToSolve(sudoku);
                                 sudoku.setStatus(1); 		// solved
                                 sudoku.setDifficulty(DifficultyLevel);
                                 return;
