@@ -561,7 +561,9 @@ void Generate_Irregular(Sudoku9x9Irregular &sudoku, int seed){
 
     // function should never reach this point
     sudoku.ResetAllGrids();
-    sudoku.setSeed(123);
+    sudoku.setStatus(0);
+    sudoku.setDifficulty(0);
+    sudoku.setSeed(-1);
 }
 
 void RestrictDigits(Sudoku9x9Irregular &sudoku){

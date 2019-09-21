@@ -737,7 +737,7 @@ void Generate_Clone(Sudoku9x9Clone &sudoku, int seed){
     sudoku.ResetAllGrids();
     sudoku.setStatus(0);
     sudoku.setDifficulty(0);
-    sudoku.setSeed(123);
+    sudoku.setSeed(-1);
 }
 
 void RestrictDigits(Sudoku9x9Clone &sudoku){

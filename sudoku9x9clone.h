@@ -393,8 +393,8 @@ void Sudoku9x9Clone::PrintToConsole(){
     int Hight = 9;
 
     for (int r = 0; r < Hight; r++) {
+        // Current Grid
         for (int c = 0; c < Width; c++) {
-
             if ( CurrentGrid[r][c] == 0 )
                 std::cout << "\033[1;31m";
             else if( CurrentGrid[r][c] == GivenGrid[r][c])
@@ -404,9 +404,8 @@ void Sudoku9x9Clone::PrintToConsole(){
 
             std::cout << CurrentGrid[r][c] << " ";
         }
-
+        // Cloned regions
         std::cout<<" \033[0m";
-
         for( int c=0; c<Width; c++ ){
             if( !reg.Grid[r*Width+c] && !reg_shifted.Grid[r*9+c] ){
                 std::cout<<"- ";
@@ -420,6 +419,47 @@ void Sudoku9x9Clone::PrintToConsole(){
             else{
                 std::cout<<"0 ";
             }
+        }
+        // Possibilities Grid
+        std::cout<<" ";
+        for( int c=0;c<9;c++ ){
+            if( N_Possibilities(r,c) == 9 ) std::cout<<"\033[1;32m";
+            else if( N_Possibilities(r,c) == 1 ) std::cout<<"\033[1;37m";
+            else if( N_Possibilities(r,c) == 0 ) std::cout<<"\033[1;31m";
+            else std::cout<<"\033[1;33m";
+            
+            std::cout<<N_Possibilities(r,c)<< " ";
+        }
+        // Information
+        std::cout <<"\033[0m";
+        if( r == 0 ){ 
+            std::cout<<"Type: ";
+            if( getType() == 1 ) std::cout<<"Classic";
+            else if( getType() == 2 ) std::cout<<"Diagonal";
+            else if( getType() == 3 ) std::cout<<"Non-Consecutive";
+            else if( getType() == 4 ) std::cout<<"Anti-Knight";
+            else if( getType() == 5 ) std::cout<<"Irregular";
+            else if( getType() == 6 ) std::cout<<"Clone";
+            else std::cout<<"Unknown";
+        }
+        else if( r == 1 ){ 
+            std::cout<<"Status: ";
+            if( getStatus() == 1 ) std::cout<<"\033[1;32m"<<"Solved";
+            else if( getStatus() == 2 ) std::cout<<"Unknown";
+            else if( getStatus() == 3 ) std::cout<<"Ambiguous";
+            else if( getStatus() == 4 ) std::cout<<"\033[1;31m"<<"Contradictory";
+            else std::cout<<"Not checked yet";
+        }
+        else if( r == 2 ){ 
+            std::cout<<"Difficulty: ";
+            if( getDifficulty() == 0 ) std::cout<<"Unknown";
+            else std::cout<<getDifficulty();
+        }
+        else if( r == 3 ){ 
+            std::cout<<"Seed: ";
+            if( getSeed() == 0 ) std::cout<<"-not generated-";
+            else if( getSeed() == -1 ) std::cout<<"\033[1;31m"<<"Generator failed";
+            else std::cout<<getSeed();
         }
         std::cout << std::endl;
     }
