@@ -1530,7 +1530,7 @@ Sudoku9x9 Generate(int seed,int type){
 
     // function should never reach this point
     sudoku.ResetAllGrids();
-    sudoku.setSeed(123);
+    sudoku.setSeed(-1);
     return sudoku;
 }
 

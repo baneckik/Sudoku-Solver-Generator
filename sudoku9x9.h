@@ -213,6 +213,7 @@ void Sudoku9x9::PrintToConsole(){
             if( r == 2 ){ 
                 std::cout<<"                         Seed: ";
                 if( getSeed() == 0 ) std::cout<<"-not generated-";
+                else if( getSeed() == -1 ) std::cout<<"\033[1;31m"<<"Generator failed";
                 else std::cout<<getSeed();
             }
         }
