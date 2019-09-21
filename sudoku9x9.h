@@ -158,8 +158,8 @@ int Sudoku9x9::N_Possibilities(int d, int rc, bool type){
 
 void Sudoku9x9::PrintToConsole(){
     for (int r = 0; r < 9; r++) {
+        // Current Grid
         for (int c = 0; c < 9; c++) {
-
             if ( CurrentGrid[r][c] == 0 )
                 std::cout << "\033[1;31m";
             else if( CurrentGrid[r][c] == GivenGrid[r][c])
@@ -168,10 +168,54 @@ void Sudoku9x9::PrintToConsole(){
                 std::cout << "\033[1;32m";
 
             std::cout << CurrentGrid[r][c];
-            std::cout <<"\033[0m";
-            if ((c + 1) % 3 == 0)std::cout << " ";
+            if ((c + 1) % 3 == 0) std::cout << " ";
         }
-        if ((r + 1) % 3 == 0)std::cout << std::endl;
+        // Possibilities Grid
+        std::cout<<" ";
+        for( int c=0;c<9;c++ ){
+            if( N_Possibilities(r,c) == 9 ) std::cout<<"\033[1;32m";
+            else if( N_Possibilities(r,c) == 1 ) std::cout<<"\033[1;37m";
+            else if( N_Possibilities(r,c) == 0 ) std::cout<<"\033[1;31m";
+            else std::cout<<"\033[1;33m";
+            
+            std::cout<<N_Possibilities(r,c);
+            if ((c + 1) % 3 == 0) std::cout << " ";
+        }
+        // Information
+        std::cout <<"\033[0m";
+        if( r == 0 ){ 
+            std::cout<<"Type: ";
+            if( getType() == 1 ) std::cout<<"Classic";
+            else if( getType() == 2 ) std::cout<<"Diagonal";
+            else if( getType() == 3 ) std::cout<<"Non-Consecutive";
+            else if( getType() == 4 ) std::cout<<"Anti-Knight";
+            else if( getType() == 5 ) std::cout<<"Irregular";
+            else if( getType() == 6 ) std::cout<<"Clone";
+            else std::cout<<"Unknown";
+        }
+        else if( r == 1 ){ 
+            std::cout<<"Status: ";
+            if( getStatus() == 1 ) std::cout<<"\033[1;32m"<<"Solved";
+            else if( getStatus() == 2 ) std::cout<<"Unknown";
+            else if( getStatus() == 3 ) std::cout<<"Ambiguous";
+            else if( getStatus() == 4 ) std::cout<<"\033[1;31m"<<"Contradictory";
+            else std::cout<<"Not checked yet";
+        }
+        else if( r == 2 ){ 
+            std::cout<<"Difficulty: ";
+            if( getDifficulty() == 0 ) std::cout<<"Unknown";
+            else std::cout<<getDifficulty();
+        }
+        
+
+        if ((r + 1) % 3 == 0){ 
+            std::cout << std::endl;
+            if( r == 2 ){ 
+                std::cout<<"                         Seed: ";
+                if( getSeed() == 0 ) std::cout<<"-not generated-";
+                else std::cout<<getSeed();
+            }
+        }
         std::cout << std::endl;
     }
 }
@@ -875,9 +919,6 @@ void Sudoku9x9::ResetAllGrids(){
     for (int i = 0; i < 9; i++)
         for (int j = 0; j < 9; j++) {
             GivenGrid[i][j] = 0;
-        }
-    for (int i = 0; i < 9; i++)
-        for (int j = 0; j < 9; j++) {
             CurrentGrid[i][j] = 0;
         }
     for (int i = 0; i < 9; i++)
